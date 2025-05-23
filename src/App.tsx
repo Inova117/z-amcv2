@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { StrictMode } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +13,7 @@ import Board from "./pages/Board";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
+// Create QueryClient outside of component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -22,10 +23,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => {
+// Separate the authenticated app component to properly use hooks
+const AuthenticatedApp = () => {
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
 
-  useEffect(() => {
+  // Use effect in the component
+  React.useEffect(() => {
     initialize();
   }, [initialize]);
 
@@ -54,6 +57,15 @@ const App = () => {
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+  );
+};
+
+// Main App component doesn't use hooks directly
+const App = () => {
+  return (
+    <StrictMode>
+      <AuthenticatedApp />
+    </StrictMode>
   );
 };
 
