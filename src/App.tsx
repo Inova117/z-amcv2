@@ -1,5 +1,5 @@
 
-import { StrictMode } from 'react';
+import React, { StrictMode, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,7 +28,7 @@ const AuthenticatedApp = () => {
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
 
   // Use effect in the component
-  React.useEffect(() => {
+  useEffect(() => {
     initialize();
   }, [initialize]);
 
