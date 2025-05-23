@@ -1,0 +1,139 @@
+# GraphQL schema definition for ZAMC BFF
+
+scalar Time
+
+type User {
+  id: ID!
+  email: String!
+  name: String
+  avatar: String
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Project {
+  id: ID!
+  name: String!
+  description: String
+  status: ProjectStatus!
+  ownerId: ID!
+  owner: User!
+  boards: [Board!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  DRAFT
+}
+
+type Board {
+  id: ID!
+  name: String!
+  description: String
+  projectId: ID!
+  project: Project!
+  assets: [Asset!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Asset {
+  id: ID!
+  name: String!
+  type: AssetType!
+  url: String
+  status: AssetStatus!
+  boardId: ID!
+  board: Board!
+  approvedBy: User
+  approvedAt: Time
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  AUDIO
+  OTHER
+}
+
+enum AssetStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVISION_REQUIRED
+}
+
+type ChatMessage {
+  id: ID!
+  content: String!
+  userId: ID!
+  user: User!
+  boardId: ID!
+  board: Board!
+  createdAt: Time!
+}
+
+type Query {
+  # Get current authenticated user
+  me: User
+
+  # Get all projects for the current user
+  projects: [Project!]!
+
+  # Get a specific project by ID
+  project(id: ID!): Project
+
+  # Get a specific board by ID
+  board(id: ID!): Board
+
+  # Get chat messages for a board
+  chatMessages(boardId: ID!, limit: Int = 50, offset: Int = 0): [ChatMessage!]!
+}
+
+type Mutation {
+  # Approve an asset
+  approveAsset(assetId: ID!): Asset!
+
+  # Send a chat message
+  chat(boardId: ID!, content: String!): ChatMessage!
+
+  # Create a new project
+  createProject(input: CreateProjectInput!): Project!
+
+  # Create a new board
+  createBoard(input: CreateBoardInput!): Board!
+
+  # Upload an asset
+  uploadAsset(input: UploadAssetInput!): Asset!
+}
+
+type Subscription {
+  # Subscribe to board updates (assets, chat messages, etc.)
+  boardUpdated(boardId: ID!): BoardUpdate!
+}
+
+union BoardUpdate = Asset | ChatMessage
+
+input CreateProjectInput {
+  name: String!
+  description: String
+}
+
+input CreateBoardInput {
+  name: String!
+  description: String
+  projectId: ID!
+}
+
+input UploadAssetInput {
+  name: String!
+  type: AssetType!
+  url: String!
+  boardId: ID!
+} 
