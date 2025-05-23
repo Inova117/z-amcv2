@@ -1,0 +1,7 @@
+
+# Helm chart dependencies
+charts/
+# Secrets not to be committed to Git
+values-*.yaml
+# Except example values files
+!values-example.yaml

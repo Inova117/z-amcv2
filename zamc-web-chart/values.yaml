@@ -1,0 +1,85 @@
+
+# Default values for zamc-web chart
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Basic configuration
+nameOverride: ""
+fullnameOverride: ""
+
+# Namespace configuration
+namespace:
+  create: true
+  name: "zamc-web"
+
+# Image configuration
+image:
+  repository: zamc-web
+  tag: latest
+  pullPolicy: Always
+
+# Replica count for the deployment
+replicaCount: 2
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+# Pod SecurityContext
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# Container SecurityContext
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: zamc-web.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: zamc-web-tls
+  #    hosts:
+  #      - zamc-web.example.com
+
+# Environment variables
+env:
+  - name: VITE_APP_ENV
+    value: production
+  - name: VITE_SUPABASE_URL
+    value: "https://zklzwarmswkakaeglpdi.supabase.co"
+  - name: VITE_SUPABASE_ANON_KEY
+    value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprbHp3YXJtc3drYWthZWdscGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NzYyOTcsImV4cCI6MjA2MzU1MjI5N30.CY7gaFldCuro-WN5kd7MPSrtaT_uCSKlMUrwjaGXs_I"
+
+# Node selector for pod scheduling
+nodeSelector: {}
+
+# Pod tolerations
+tolerations: []
+
+# Pod affinity rules
+affinity: {}
