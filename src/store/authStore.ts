@@ -1,128 +1,73 @@
-
 import { create } from 'zustand';
-import { supabase } from '@/integrations/supabase/client';
+import { devtools } from 'zustand/middleware';
 
 interface User {
   id: string;
-  email?: string;
-  name?: string;
+  email: string;
+  name: string;
 }
 
-interface AuthState {
+interface AuthStore {
   user: User | null;
-  isLoading: boolean;
   isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  isLoading: boolean;
+  
+  setUser: (user: User | null) => void;
+  setLoading: (loading: boolean) => void;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
   initialize: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  isLoading: true,
-  isAuthenticated: false,
+export const useAuthStore = create<AuthStore>()(
+  devtools(
+    (set, get) => ({
+      user: {
+        id: 'demo-user-1',
+        email: 'demo@example.com',
+        name: 'Demo User',
+      },
+      isAuthenticated: true,
+      isLoading: false,
 
-  signIn: async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      if (data.user) {
-        set({
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.name,
-          },
-          isAuthenticated: true,
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      setLoading: (isLoading) => set({ isLoading }),
+
+      login: async (email: string, password: string) => {
+        set({ isLoading: true });
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const user: User = {
+          id: 'demo-user-1',
+          email,
+          name: 'Demo User',
+        };
+        
+        set({ 
+          user, 
+          isAuthenticated: true, 
+          isLoading: false 
         });
-      }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      throw error;
-    }
-  },
+      },
 
-  signUp: async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      if (data.user) {
-        set({
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.name,
-          },
-          isAuthenticated: true,
+      logout: () => {
+        set({ 
+          user: null, 
+          isAuthenticated: false 
         });
-      }
-    } catch (error) {
-      console.error('Sign up error:', error);
-      throw error;
-    }
-  },
+      },
 
-  signOut: async () => {
-    try {
-      await supabase.auth.signOut();
-      set({
-        user: null,
-        isAuthenticated: false,
-      });
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  },
-
-  initialize: async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        set({
-          user: {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.user_metadata?.name,
-          },
-          isAuthenticated: true,
-          isLoading: false,
-        });
-      } else {
+      initialize: async () => {
+        // Simulate initialization
+        set({ isLoading: true });
+        await new Promise(resolve => setTimeout(resolve, 500));
         set({ isLoading: false });
-      }
-
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (session?.user) {
-          set({
-            user: {
-              id: session.user.id,
-              email: session.user.email,
-              name: session.user.user_metadata?.name,
-            },
-            isAuthenticated: true,
-          });
-        } else {
-          set({
-            user: null,
-            isAuthenticated: false,
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Auth initialization error:', error);
-      set({ isLoading: false });
+      },
+    }),
+    {
+      name: 'auth-store',
     }
-  },
-}));
+  )
+);

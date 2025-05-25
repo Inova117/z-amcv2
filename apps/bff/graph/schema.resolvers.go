@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"zamcv2bff/graph/generated"
-	"zamcv2bff/graph/model"
-	"zamcv2bff/internal/auth"
+	"github.com/zerionstudio/zamc-v2/apps/bff/graph/generated"
+	"github.com/zerionstudio/zamc-v2/apps/bff/graph/model"
+	"github.com/zerionstudio/zamc-v2/apps/bff/internal/auth"
 
 )
 

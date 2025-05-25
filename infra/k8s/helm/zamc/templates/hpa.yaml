@@ -1,0 +1,135 @@
+{{- if .Values.web.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "zamc.fullname" . }}-web
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "zamc.fullname" . }}-web
+  minReplicas: {{ .Values.web.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.web.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.web.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.web.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.web.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.web.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.bff.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "zamc.fullname" . }}-bff
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bff
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "zamc.fullname" . }}-bff
+  minReplicas: {{ .Values.bff.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.bff.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.bff.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.bff.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.bff.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.bff.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.orchestrator.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "zamc.fullname" . }}-orchestrator
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: orchestrator
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "zamc.fullname" . }}-orchestrator
+  minReplicas: {{ .Values.orchestrator.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.orchestrator.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.orchestrator.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.orchestrator.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.orchestrator.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.orchestrator.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.connectors.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "zamc.fullname" . }}-connectors
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: connectors
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "zamc.fullname" . }}-connectors
+  minReplicas: {{ .Values.connectors.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.connectors.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.connectors.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.connectors.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.connectors.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.connectors.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }} 

@@ -1,0 +1,385 @@
+# =============================================================================
+# ZAMC Production Configuration
+# =============================================================================
+
+# Global production settings
+global:
+  imageRegistry: "your-registry.com"
+  imagePullSecrets:
+    - name: regcred
+
+# =============================================================================
+# Application Configuration
+# =============================================================================
+
+# Web Frontend - Production Settings
+web:
+  replicaCount: 3
+  image:
+    tag: "latest"
+    pullPolicy: Always
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/rate-limit: "100"
+      nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    hosts:
+      - host: zamc.yourdomain.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: zamc-web-tls
+        hosts:
+          - zamc.yourdomain.com
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    NODE_ENV: production
+    VITE_API_URL: https://api.yourdomain.com/graphql
+
+# BFF GraphQL API - Production Settings
+bff:
+  replicaCount: 3
+  image:
+    tag: "latest"
+    pullPolicy: Always
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/rate-limit: "200"
+      nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+      nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    hosts:
+      - host: api.yourdomain.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: zamc-bff-tls
+        hosts:
+          - api.yourdomain.com
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 15
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    PORT: "4000"
+    LOG_LEVEL: warn
+    ENVIRONMENT: production
+    GRAPHQL_PLAYGROUND: "false"
+    GRAPHQL_INTROSPECTION: "false"
+
+# Orchestrator Service - Production Settings
+orchestrator:
+  replicaCount: 2
+  image:
+    tag: "latest"
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 4000m
+      memory: 4Gi
+    requests:
+      cpu: 2000m
+      memory: 2Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 85
+  env:
+    PORT: "8001"
+    LOG_LEVEL: warn
+    ENVIRONMENT: production
+    MAX_CONCURRENT_STRATEGIES: "10"
+    STRATEGY_TIMEOUT: "600"
+    CONTENT_GENERATION_TIMEOUT: "180"
+
+# Connectors Service - Production Settings
+connectors:
+  replicaCount: 3
+  image:
+    tag: "latest"
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 12
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    PORT: "8002"
+    LOG_LEVEL: warn
+    ENVIRONMENT: production
+    MAX_RETRY_ATTEMPTS: "5"
+    RETRY_DELAY_SECONDS: "10"
+    DEPLOYMENT_TIMEOUT_SECONDS: "600"
+
+# =============================================================================
+# Infrastructure Dependencies - Production Settings
+# =============================================================================
+
+# PostgreSQL Database - Production Configuration
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "CHANGE_ME_IN_PRODUCTION"
+    username: "zamc"
+    password: "CHANGE_ME_IN_PRODUCTION"
+    database: "zamc"
+  primary:
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"
+    resources:
+      limits:
+        cpu: 4000m
+        memory: 8Gi
+      requests:
+        cpu: 2000m
+        memory: 4Gi
+    configuration: |
+      max_connections = 200
+      shared_buffers = 2GB
+      effective_cache_size = 6GB
+      maintenance_work_mem = 512MB
+      checkpoint_completion_target = 0.9
+      wal_buffers = 16MB
+      default_statistics_target = 100
+      random_page_cost = 1.1
+      effective_io_concurrency = 200
+      work_mem = 10MB
+      min_wal_size = 1GB
+      max_wal_size = 4GB
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# Redis Cache - Production Configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "CHANGE_ME_IN_PRODUCTION"
+  master:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: "fast-ssd"
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    configuration: |
+      maxmemory-policy allkeys-lru
+      timeout 300
+      tcp-keepalive 60
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: "fast-ssd"
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# NATS Message Broker - Production Configuration
+nats:
+  enabled: true
+  nats:
+    jetstream:
+      enabled: true
+      fileStore:
+        pvc:
+          size: 50Gi
+          storageClassName: "fast-ssd"
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    cluster:
+      enabled: true
+      replicas: 3
+  natsBox:
+    enabled: true
+
+# =============================================================================
+# Monitoring and Observability - Production Settings
+# =============================================================================
+
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 15s
+      scrapeTimeout: 10s
+    retention: "30d"
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"
+  grafana:
+    enabled: true
+    adminPassword: "CHANGE_ME_IN_PRODUCTION"
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: "fast-ssd"
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+  jaeger:
+    enabled: true
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+
+# =============================================================================
+# Security Configuration - Production Settings
+# =============================================================================
+
+# Pod Security Context - Strict Security
+podSecurityContext:
+  fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# Security Context - Strict Security
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Network Policies - Enabled for Production
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+  egress:
+    enabled: true
+
+# =============================================================================
+# Storage Configuration - Production Settings
+# =============================================================================
+
+persistence:
+  enabled: true
+  storageClass: "fast-ssd"
+  accessMode: ReadWriteOnce
+  size: 50Gi
+
+# =============================================================================
+# Node Selection and Tolerations - Production Settings
+# =============================================================================
+
+nodeSelector:
+  node-type: "application"
+
+tolerations:
+  - key: "application"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - zamc
+        topologyKey: kubernetes.io/hostname
+
+# =============================================================================
+# Development Tools - Disabled in Production
+# =============================================================================
+
+devTools:
+  enabled: false
+  pgAdmin:
+    enabled: false
+  redisCommander:
+    enabled: false 

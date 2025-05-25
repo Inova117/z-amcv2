@@ -1,0 +1,380 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Infrastructure Services
+  # =============================================================================
+  
+  # PostgreSQL Database (Supabase compatible)
+  postgres:
+    image: postgres:15-alpine
+    container_name: zamc-postgres
+    environment:
+      POSTGRES_DB: zamc
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - zamc-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zamc"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: zamc-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - zamc-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # NATS for event streaming
+  nats:
+    image: nats:2.10-alpine
+    container_name: zamc-nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"  # HTTP monitoring
+      - "6222:6222"  # Cluster port
+    command: [
+      "--jetstream",
+      "--http_port", "8222",
+      "--port", "4222",
+      "--cluster_name", "zamc-cluster",
+      "--cluster", "nats://0.0.0.0:6222",
+      "--store_dir", "/data"
+    ]
+    volumes:
+      - nats_data:/data
+    networks:
+      - zamc-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8222/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # =============================================================================
+  # ZAMC Application Services
+  # =============================================================================
+
+  # ZAMC Web Frontend (React/Vite)
+  zamc-web:
+    build:
+      context: ../../
+      dockerfile: infra/compose/dockerfiles/Dockerfile.web
+    container_name: zamc-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - VITE_API_URL=http://localhost:4000/graphql
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-http://localhost:8000}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    volumes:
+      - ../../src:/app/src:ro
+      - ../../public:/app/public:ro
+      - ../../index.html:/app/index.html:ro
+      - ../../package.json:/app/package.json:ro
+      - ../../vite.config.ts:/app/vite.config.ts:ro
+      - ../../tailwind.config.ts:/app/tailwind.config.ts:ro
+      - ../../tsconfig.json:/app/tsconfig.json:ro
+    networks:
+      - zamc-network
+    depends_on:
+      - zamc-bff
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # BFF GraphQL API (Go)
+  zamc-bff:
+    build:
+      context: ../../apps/bff
+      dockerfile: ../../infra/compose/dockerfiles/Dockerfile.bff
+    container_name: zamc-bff
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/zamc?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - NATS_URL=nats://nats:4222
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret-key}
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+      # GraphQL Configuration
+      - GRAPHQL_PLAYGROUND=${GRAPHQL_PLAYGROUND:-true}
+      - GRAPHQL_INTROSPECTION=${GRAPHQL_INTROSPECTION:-true}
+    env_file:
+      - .env
+    volumes:
+      - ../../apps/bff:/app:ro
+    networks:
+      - zamc-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Orchestrator Service (Python/FastAPI)
+  zamc-orchestrator:
+    build:
+      context: ../../services/orchestrator
+      dockerfile: ../../infra/compose/dockerfiles/Dockerfile.orchestrator
+    container_name: zamc-orchestrator
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/zamc
+      - REDIS_URL=redis://redis:6379
+      - NATS_URL=nats://nats:4222
+      # AI/ML Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
+      # Strategy Generation
+      - MAX_CONCURRENT_STRATEGIES=${MAX_CONCURRENT_STRATEGIES:-5}
+      - STRATEGY_TIMEOUT=${STRATEGY_TIMEOUT:-300}
+      - CONTENT_GENERATION_TIMEOUT=${CONTENT_GENERATION_TIMEOUT:-120}
+    env_file:
+      - .env
+    volumes:
+      - ../../services/orchestrator:/app:ro
+      - orchestrator_data:/app/data
+    networks:
+      - zamc-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Connectors Service (Go)
+  zamc-connectors:
+    build:
+      context: ../../services/connectors
+      dockerfile: ../../infra/compose/dockerfiles/Dockerfile.connectors
+    container_name: zamc-connectors
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - NATS_URL=nats://nats:4222
+      - NATS_SUBJECT_PREFIX=zamc
+      - NATS_QUEUE_GROUP=connectors
+      # Google Ads Configuration
+      - GOOGLE_ADS_DEVELOPER_TOKEN=${GOOGLE_ADS_DEVELOPER_TOKEN}
+      - GOOGLE_ADS_CLIENT_ID=${GOOGLE_ADS_CLIENT_ID}
+      - GOOGLE_ADS_CLIENT_SECRET=${GOOGLE_ADS_CLIENT_SECRET}
+      - GOOGLE_ADS_REFRESH_TOKEN=${GOOGLE_ADS_REFRESH_TOKEN}
+      - GOOGLE_ADS_CUSTOMER_ID=${GOOGLE_ADS_CUSTOMER_ID}
+      - GOOGLE_ADS_LOGIN_CUSTOMER_ID=${GOOGLE_ADS_LOGIN_CUSTOMER_ID}
+      # Meta Marketing API Configuration
+      - META_APP_ID=${META_APP_ID}
+      - META_APP_SECRET=${META_APP_SECRET}
+      - META_ACCESS_TOKEN=${META_ACCESS_TOKEN}
+      - META_AD_ACCOUNT_ID=${META_AD_ACCOUNT_ID}
+      - META_API_VERSION=${META_API_VERSION:-v18.0}
+      # Deployment Configuration
+      - MAX_RETRY_ATTEMPTS=${MAX_RETRY_ATTEMPTS:-3}
+      - RETRY_DELAY_SECONDS=${RETRY_DELAY_SECONDS:-5}
+      - DEPLOYMENT_TIMEOUT_SECONDS=${DEPLOYMENT_TIMEOUT_SECONDS:-300}
+    env_file:
+      - .env
+    volumes:
+      - ../../services/connectors:/app:ro
+    networks:
+      - zamc-network
+    depends_on:
+      nats:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/app/connectors", "--health-check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # =============================================================================
+  # Monitoring and Observability (Optional)
+  # =============================================================================
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: zamc-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - zamc-network
+    profiles:
+      - monitoring
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: zamc-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - zamc-network
+    profiles:
+      - monitoring
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: zamc-jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - zamc-network
+    profiles:
+      - monitoring
+
+  # NATS Monitoring
+  nats-surveyor:
+    image: natsio/nats-surveyor:latest
+    container_name: zamc-nats-surveyor
+    ports:
+      - "7777:7777"
+    environment:
+      - NATS_SURVEYOR_SERVER_COUNT=1
+      - NATS_SURVEYOR_SERVERS=nats://nats:4222
+    depends_on:
+      - nats
+    networks:
+      - zamc-network
+    profiles:
+      - monitoring
+
+  # =============================================================================
+  # Development Tools (Optional)
+  # =============================================================================
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: zamc-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@zamc.dev}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - zamc-network
+    profiles:
+      - dev-tools
+
+  # Redis Commander for Redis management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: zamc-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - zamc-network
+    profiles:
+      - dev-tools
+
+# =============================================================================
+# Networks and Volumes
+# =============================================================================
+
+networks:
+  zamc-network:
+    driver: bridge
+    name: zamc-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nats_data:
+    driver: local
+  orchestrator_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  pgadmin_data:
+    driver: local 

@@ -1,0 +1,126 @@
+{{- if .Values.orchestrator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "zamc.fullname" . }}-orchestrator
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: orchestrator
+spec:
+  {{- if not .Values.orchestrator.autoscaling.enabled }}
+  replicas: {{ .Values.orchestrator.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "zamc.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: orchestrator
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "zamc.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: orchestrator
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "zamc.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: orchestrator
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.global.imageRegistry }}{{ .Values.orchestrator.image.repository }}:{{ .Values.orchestrator.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.orchestrator.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.orchestrator.env.PORT | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.orchestrator.env.LOG_LEVEL | quote }}
+            - name: ENVIRONMENT
+              value: {{ .Values.orchestrator.env.ENVIRONMENT | quote }}
+            - name: MAX_CONCURRENT_STRATEGIES
+              value: {{ .Values.orchestrator.env.MAX_CONCURRENT_STRATEGIES | quote }}
+            - name: STRATEGY_TIMEOUT
+              value: {{ .Values.orchestrator.env.STRATEGY_TIMEOUT | quote }}
+            - name: CONTENT_GENERATION_TIMEOUT
+              value: {{ .Values.orchestrator.env.CONTENT_GENERATION_TIMEOUT | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: database-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: redis-url
+            - name: NATS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: nats-url
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: openai-api-key
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: anthropic-api-key
+            - name: HUGGINGFACE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: huggingface-api-key
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.orchestrator.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }} 

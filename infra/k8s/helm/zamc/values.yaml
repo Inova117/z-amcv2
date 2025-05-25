@@ -1,0 +1,392 @@
+# =============================================================================
+# ZAMC Platform Helm Values
+# =============================================================================
+
+# Global configuration
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+  
+# =============================================================================
+# Application Configuration
+# =============================================================================
+
+# ZAMC Web Frontend
+web:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: zamc/web
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: zamc.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: zamc-web-tls
+        hosts:
+          - zamc.local
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+  env:
+    NODE_ENV: production
+    VITE_API_URL: http://zamc-bff:4000/graphql
+
+# ZAMC BFF GraphQL API
+bff:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: zamc/bff
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 4000
+    targetPort: 4000
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    hosts:
+      - host: api.zamc.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: zamc-bff-tls
+        hosts:
+          - api.zamc.local
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+  env:
+    PORT: "4000"
+    LOG_LEVEL: info
+    ENVIRONMENT: production
+    GRAPHQL_PLAYGROUND: "false"
+    GRAPHQL_INTROSPECTION: "false"
+
+# ZAMC Orchestrator Service
+orchestrator:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: zamc/orchestrator
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8001
+    targetPort: 8001
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+  env:
+    PORT: "8001"
+    LOG_LEVEL: info
+    ENVIRONMENT: production
+    MAX_CONCURRENT_STRATEGIES: "5"
+    STRATEGY_TIMEOUT: "300"
+    CONTENT_GENERATION_TIMEOUT: "120"
+
+# ZAMC Connectors Service
+connectors:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: zamc/connectors
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8002
+    targetPort: 8002
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+  env:
+    PORT: "8002"
+    LOG_LEVEL: info
+    ENVIRONMENT: production
+    MAX_RETRY_ATTEMPTS: "3"
+    RETRY_DELAY_SECONDS: "5"
+    DEPLOYMENT_TIMEOUT_SECONDS: "300"
+
+# =============================================================================
+# Infrastructure Dependencies
+# =============================================================================
+
+# PostgreSQL Database
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "zamc-postgres-password"
+    username: "zamc"
+    password: "zamc-password"
+    database: "zamc"
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# Redis Cache
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "zamc-redis-password"
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# NATS Message Broker
+nats:
+  enabled: true
+  nats:
+    jetstream:
+      enabled: true
+      fileStore:
+        pvc:
+          size: 10Gi
+          storageClassName: ""
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  natsBox:
+    enabled: true
+
+# =============================================================================
+# Secrets and Configuration
+# =============================================================================
+
+# Secrets configuration
+secrets:
+  # Database secrets
+  database:
+    url: "postgresql://zamc:zamc-password@zamc-postgresql:5432/zamc"
+  
+  # Redis secrets
+  redis:
+    url: "redis://:zamc-redis-password@zamc-redis-master:6379"
+  
+  # NATS secrets
+  nats:
+    url: "nats://zamc-nats:4222"
+  
+  # JWT secrets
+  jwt:
+    secret: "your-super-secure-jwt-secret-key-change-in-production"
+  
+  # AI API keys (set these in your values override file)
+  ai:
+    openaiApiKey: ""
+    anthropicApiKey: ""
+    huggingfaceApiKey: ""
+  
+  # Ad platform credentials (set these in your values override file)
+  googleAds:
+    developerToken: ""
+    clientId: ""
+    clientSecret: ""
+    refreshToken: ""
+    customerId: ""
+    loginCustomerId: ""
+  
+  meta:
+    appId: ""
+    appSecret: ""
+    accessToken: ""
+    adAccountId: ""
+    apiVersion: "v18.0"
+
+# =============================================================================
+# Monitoring and Observability
+# =============================================================================
+
+# Prometheus monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 10s
+  grafana:
+    enabled: true
+    adminPassword: "admin"
+    persistence:
+      enabled: true
+      size: 5Gi
+  jaeger:
+    enabled: true
+
+# =============================================================================
+# Ingress Configuration
+# =============================================================================
+
+# Global ingress settings
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  tls:
+    enabled: true
+    secretName: "zamc-tls"
+
+# =============================================================================
+# Security Configuration
+# =============================================================================
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Security Context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Network Policies
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+  egress:
+    enabled: true
+
+# =============================================================================
+# Storage Configuration
+# =============================================================================
+
+# Persistent Volume Claims
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# =============================================================================
+# Service Account and RBAC
+# =============================================================================
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+rbac:
+  create: true
+
+# =============================================================================
+# Node Selection and Tolerations
+# =============================================================================
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# =============================================================================
+# Development and Testing
+# =============================================================================
+
+# Development tools (disabled in production)
+devTools:
+  enabled: false
+  pgAdmin:
+    enabled: false
+  redisCommander:
+    enabled: false 

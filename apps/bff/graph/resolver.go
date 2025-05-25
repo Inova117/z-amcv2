@@ -1,9 +1,9 @@
 package graph
 
 import (
-	"zamcv2bff/internal/auth"
-	"zamcv2bff/internal/database"
-	"zamcv2bff/internal/nats"
+	"github.com/zerionstudio/zamc-v2/apps/bff/internal/auth"
+	"github.com/zerionstudio/zamc-v2/apps/bff/internal/database"
+	"github.com/zerionstudio/zamc-v2/apps/bff/internal/nats"
 
 
 )

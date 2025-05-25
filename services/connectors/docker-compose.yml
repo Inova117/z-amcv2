@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # NATS Server
+  nats:
+    image: nats:2.10-alpine
+    container_name: zamc-nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"  # HTTP monitoring
+      - "6222:6222"  # Cluster port
+    command: [
+      "--jetstream",
+      "--http_port", "8222",
+      "--port", "4222",
+      "--cluster_name", "zamc-cluster",
+      "--cluster", "nats://0.0.0.0:6222"
+    ]
+    networks:
+      - zamc-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8222/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ZAMC Connectors Service
+  connectors:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zamc-connectors
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - LOG_LEVEL=info
+      - ENVIRONMENT=development
+      - NATS_URL=nats://nats:4222
+      - NATS_SUBJECT_PREFIX=zamc
+      - NATS_QUEUE_GROUP=connectors
+      # Google Ads Configuration (set these in .env file)
+      - GOOGLE_ADS_DEVELOPER_TOKEN=${GOOGLE_ADS_DEVELOPER_TOKEN}
+      - GOOGLE_ADS_CLIENT_ID=${GOOGLE_ADS_CLIENT_ID}
+      - GOOGLE_ADS_CLIENT_SECRET=${GOOGLE_ADS_CLIENT_SECRET}
+      - GOOGLE_ADS_REFRESH_TOKEN=${GOOGLE_ADS_REFRESH_TOKEN}
+      - GOOGLE_ADS_CUSTOMER_ID=${GOOGLE_ADS_CUSTOMER_ID}
+      - GOOGLE_ADS_LOGIN_CUSTOMER_ID=${GOOGLE_ADS_LOGIN_CUSTOMER_ID}
+      # Meta Marketing API Configuration (set these in .env file)
+      - META_APP_ID=${META_APP_ID}
+      - META_APP_SECRET=${META_APP_SECRET}
+      - META_ACCESS_TOKEN=${META_ACCESS_TOKEN}
+      - META_AD_ACCOUNT_ID=${META_AD_ACCOUNT_ID}
+      - META_API_VERSION=${META_API_VERSION:-v18.0}
+      # Deployment Configuration
+      - DEPLOYMENT_MAX_RETRY_ATTEMPTS=3
+      - DEPLOYMENT_RETRY_DELAY=5s
+      - DEPLOYMENT_TIMEOUT=30s
+      - DEPLOYMENT_CONCURRENT_LIMIT=10
+    env_file:
+      - .env
+    depends_on:
+      nats:
+        condition: service_healthy
+    networks:
+      - zamc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/connectors", "--health-check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # NATS Monitoring (optional)
+  nats-surveyor:
+    image: natsio/nats-surveyor:latest
+    container_name: zamc-nats-surveyor
+    ports:
+      - "7777:7777"
+    environment:
+      - NATS_SURVEYOR_SERVER_COUNT=1
+      - NATS_SURVEYOR_SERVERS=nats://nats:4222
+    depends_on:
+      - nats
+    networks:
+      - zamc-network
+    profiles:
+      - monitoring
+
+  # Prometheus (optional, for metrics collection)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: zamc-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - zamc-network
+    profiles:
+      - monitoring
+
+  # Grafana (optional, for metrics visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: zamc-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - zamc-network
+    profiles:
+      - monitoring
+
+networks:
+  zamc-network:
+    driver: bridge
+    name: zamc-network
+
+volumes:
+  grafana-storage:
+    driver: local 

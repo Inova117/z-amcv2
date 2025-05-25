@@ -1,0 +1,156 @@
+{{- if .Values.connectors.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "zamc.fullname" . }}-connectors
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: connectors
+spec:
+  {{- if not .Values.connectors.autoscaling.enabled }}
+  replicas: {{ .Values.connectors.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "zamc.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: connectors
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "zamc.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: connectors
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "zamc.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: connectors
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.global.imageRegistry }}{{ .Values.connectors.image.repository }}:{{ .Values.connectors.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.connectors.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.connectors.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.connectors.env.PORT | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.connectors.env.LOG_LEVEL | quote }}
+            - name: ENVIRONMENT
+              value: {{ .Values.connectors.env.ENVIRONMENT | quote }}
+            - name: MAX_RETRY_ATTEMPTS
+              value: {{ .Values.connectors.env.MAX_RETRY_ATTEMPTS | quote }}
+            - name: RETRY_DELAY_SECONDS
+              value: {{ .Values.connectors.env.RETRY_DELAY_SECONDS | quote }}
+            - name: DEPLOYMENT_TIMEOUT_SECONDS
+              value: {{ .Values.connectors.env.DEPLOYMENT_TIMEOUT_SECONDS | quote }}
+            - name: NATS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: nats-url
+            - name: NATS_SUBJECT_PREFIX
+              value: "zamc"
+            - name: NATS_QUEUE_GROUP
+              value: "connectors"
+            - name: GOOGLE_ADS_DEVELOPER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: google-ads-developer-token
+            - name: GOOGLE_ADS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: google-ads-client-id
+            - name: GOOGLE_ADS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: google-ads-client-secret
+            - name: GOOGLE_ADS_REFRESH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: google-ads-refresh-token
+            - name: GOOGLE_ADS_CUSTOMER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: google-ads-customer-id
+            - name: GOOGLE_ADS_LOGIN_CUSTOMER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: google-ads-login-customer-id
+            - name: META_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: meta-app-id
+            - name: META_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: meta-app-secret
+            - name: META_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: meta-access-token
+            - name: META_AD_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: meta-ad-account-id
+            - name: META_API_VERSION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: meta-api-version
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.connectors.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }} 

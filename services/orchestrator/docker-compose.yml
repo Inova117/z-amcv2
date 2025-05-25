@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:v1.7.0
+    container_name: zamc-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NATS Server
+  nats:
+    image: nats:2.10-alpine
+    container_name: zamc-nats-orchestrator
+    ports:
+      - "4222:4222"
+      - "8222:8222"  # HTTP monitoring port
+    command: ["--http_port", "8222", "--jetstream"]
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8222/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # AI Strategy Generator Orchestrator
+  orchestrator:
+    build: .
+    container_name: zamc-orchestrator
+    ports:
+      - "8001:8001"
+    environment:
+      # Server Configuration
+      HOST: 0.0.0.0
+      PORT: 8001
+      DEBUG: true
+      LOG_LEVEL: INFO
+      
+      # OpenAI Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: gpt-4-turbo-preview
+      OPENAI_TEMPERATURE: 0.7
+      OPENAI_MAX_TOKENS: 4000
+      
+      # Qdrant Configuration
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION_NAME: zamc_strategies
+      QDRANT_VECTOR_SIZE: 1536
+      
+      # NATS Configuration
+      NATS_URL: nats://nats:4222
+      NATS_SUBJECT_PREFIX: zamc
+      
+      # External Services
+      BFF_URL: http://host.docker.internal:8080
+      
+      # Strategy Generation Configuration
+      STRATEGY_DURATION_DAYS: 90
+      MAX_CONTENT_PIECES: 50
+      CONTENT_TYPES: blog_post,social_media,email_campaign,video_script,infographic
+      
+      # Environment
+      ENVIRONMENT: development
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  qdrant_data:
+
+networks:
+  default:
+    name: zamc-network
+    external: true 

@@ -1,0 +1,112 @@
+{{- if .Values.bff.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "zamc.fullname" . }}-bff
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bff
+spec:
+  {{- if not .Values.bff.autoscaling.enabled }}
+  replicas: {{ .Values.bff.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "zamc.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: bff
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "zamc.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: bff
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "zamc.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: bff
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.global.imageRegistry }}{{ .Values.bff.image.repository }}:{{ .Values.bff.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.bff.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.bff.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.bff.env.PORT | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.bff.env.LOG_LEVEL | quote }}
+            - name: ENVIRONMENT
+              value: {{ .Values.bff.env.ENVIRONMENT | quote }}
+            - name: GRAPHQL_PLAYGROUND
+              value: {{ .Values.bff.env.GRAPHQL_PLAYGROUND | quote }}
+            - name: GRAPHQL_INTROSPECTION
+              value: {{ .Values.bff.env.GRAPHQL_INTROSPECTION | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: database-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: redis-url
+            - name: NATS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: nats-url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "zamc.fullname" . }}-secrets
+                  key: jwt-secret
+            - name: CORS_ORIGINS
+              value: "https://{{ (index .Values.web.ingress.hosts 0).host }}"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.bff.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }} 
