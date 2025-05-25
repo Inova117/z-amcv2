@@ -6,7 +6,10 @@ import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Board', href: '/board', icon: '📋' },
+  { name: 'Dashboard', href: '/board', icon: '📋' },
+  { name: 'Analytics', href: '/analytics', icon: '📊' },
+  { name: 'Campaign Builder', href: '/campaigns/new', icon: '🚀' },
+  { name: 'Asset Manager', href: '/assets', icon: '🖼️' },
   { name: 'Strategy Chat', href: '/chat', icon: '💬' },
 ];
 
@@ -17,10 +20,10 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
-  const { user, signOut } = useAuthStore();
+  const { user, logout } = useAuthStore();
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = () => {
+    logout();
   };
 
   return (

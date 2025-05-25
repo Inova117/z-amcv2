@@ -10,6 +10,8 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingPage } from '@/components/ui/LoadingSpinner';
 import { CampaignBuilderPage } from '@/pages/CampaignBuilderPage';
+import { AssetManagerPage } from '@/pages/AssetManagerPage';
+import { AnalyticsPage } from '@/pages/AnalyticsPage';
 import Board from "./pages/Board";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
@@ -51,9 +53,11 @@ const AuthenticatedApp = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/board" replace />} />
               <Route path="/board" element={<Board />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/campaigns/new" element={<CampaignBuilderPage />} />
               <Route path="/campaigns/:id/edit" element={<CampaignBuilderPage />} />
+              <Route path="/assets" element={<AssetManagerPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </DashboardLayout>
