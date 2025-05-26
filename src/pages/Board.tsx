@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { NotificationDemo } from '@/components/demo/NotificationDemo';
 import { graphqlClient, SAMPLE_QUERIES } from '@/lib/graphql-client';
 
 interface Project {
@@ -111,6 +112,9 @@ const Board = () => {
         <h1 className="text-3xl font-bold">Marketing Board</h1>
         <Button>Create New</Button>
       </div>
+
+      {/* Notification Demo */}
+      <NotificationDemo />
 
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">

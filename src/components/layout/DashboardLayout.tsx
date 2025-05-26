@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
+import { NotificationCenter } from './NotificationCenter';
 import { cn } from '@/lib/utils';
 
 const navigation = [
@@ -11,6 +12,7 @@ const navigation = [
   { name: 'Campaign Builder', href: '/campaigns/new', icon: '🚀' },
   { name: 'Asset Manager', href: '/assets', icon: '🖼️' },
   { name: 'Strategy Chat', href: '/chat', icon: '💬' },
+  { name: 'Settings', href: '/settings', icon: '⚙️' },
 ];
 
 interface DashboardLayoutProps {
@@ -44,6 +46,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <NotificationCenter />
               <span className="text-sm text-muted-foreground">
                 {user?.email || 'Anonymous User'}
               </span>

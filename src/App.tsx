@@ -6,12 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from '@/store/authStore';
+import { useNotificationSubscriptions } from '@/hooks/useNotificationSubscriptions';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingPage } from '@/components/ui/LoadingSpinner';
 import { CampaignBuilderPage } from '@/pages/CampaignBuilderPage';
 import { AssetManagerPage } from '@/pages/AssetManagerPage';
 import { AnalyticsPage } from '@/pages/AnalyticsPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 import Board from "./pages/Board";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
@@ -29,6 +31,9 @@ const queryClient = new QueryClient({
 // Separate the authenticated app component to properly use hooks
 const AuthenticatedApp = () => {
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
+  
+  // Initialize notification subscriptions
+  useNotificationSubscriptions();
 
   // Use effect in the component
   useEffect(() => {
@@ -58,6 +63,7 @@ const AuthenticatedApp = () => {
               <Route path="/campaigns/new" element={<CampaignBuilderPage />} />
               <Route path="/campaigns/:id/edit" element={<CampaignBuilderPage />} />
               <Route path="/assets" element={<AssetManagerPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </DashboardLayout>
