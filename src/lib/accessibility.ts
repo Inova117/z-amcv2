@@ -207,38 +207,7 @@ export const getFormFieldProps = (field: {
   };
 };
 
-// Skip link utilities
-export const SkipLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
-  return (
-    <a
-      href={href}
-      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg"
-    >
-      {children}
-    </a>
-  );
-};
-
-// Live region component for announcements
-export const LiveRegion = ({ 
-  message, 
-  priority = 'polite', 
-  className = 'sr-only' 
-}: {
-  message: string;
-  priority?: 'polite' | 'assertive';
-  className?: string;
-}) => {
-  return (
-    <div
-      aria-live={priority}
-      aria-atomic="true"
-      className={className}
-    >
-      {message}
-    </div>
-  );
-};
+// Skip link and live region components are now in AccessibilityAudit.tsx
 
 // Accessibility audit utilities
 export interface AccessibilityIssue {
@@ -289,7 +258,7 @@ export const auditKeyboardAccessibility = (element: HTMLElement): AccessibilityI
                        (role && interactiveRoles.includes(role)) ||
                        element.onclick !== null;
   
-  if (isInteractive && tabIndex === '-1' && !element.disabled) {
+  if (isInteractive && tabIndex === '-1' && !(element as HTMLInputElement | HTMLButtonElement).disabled) {
     issues.push({
       type: 'warning',
       rule: 'Keyboard Accessibility',

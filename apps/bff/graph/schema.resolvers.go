@@ -394,13 +394,13 @@ func (r *mutationResolver) UploadAsset(ctx context.Context, input model.UploadAs
 }
 
 // BoardUpdated is the resolver for the boardUpdated field.
-func (r *subscriptionResolver) BoardUpdated(ctx context.Context, boardID string) (<-chan *model.BoardUpdate, error) {
+func (r *subscriptionResolver) BoardUpdated(ctx context.Context, boardID string) (<-chan model.BoardUpdate, error) {
 	user := ctx.Value("user")
 	if user == nil {
 		return nil, fmt.Errorf("unauthorized")
 	}
 
-	ch := make(chan *model.BoardUpdate, 1)
+	ch := make(chan model.BoardUpdate, 1)
 
 	// Subscribe to NATS updates
 	sub, err := r.NatsConn.SubscribeBoardUpdates(boardID, func(data []byte) {
@@ -409,12 +409,12 @@ func (r *subscriptionResolver) BoardUpdated(ctx context.Context, boardID string)
 		// Try to unmarshal as Asset first
 		var asset model.Asset
 		if err := json.Unmarshal(data, &asset); err == nil {
-			update = &asset
+			update = asset
 		} else {
 			// Try to unmarshal as ChatMessage
 			var message model.ChatMessage
 			if err := json.Unmarshal(data, &message); err == nil {
-				update = &message
+				update = message
 			} else {
 				log.Printf("Failed to unmarshal board update: %v", err)
 				return
@@ -422,7 +422,7 @@ func (r *subscriptionResolver) BoardUpdated(ctx context.Context, boardID string)
 		}
 
 		select {
-		case ch <- &update:
+		case ch <- update:
 		case <-ctx.Done():
 			return
 		}

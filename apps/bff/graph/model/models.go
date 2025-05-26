@@ -2,8 +2,6 @@ package model
 
 import (
 	"fmt"
-	"io"
-	"strconv"
 	"time"
 )
 
@@ -25,8 +23,8 @@ func UnmarshalTime(v interface{}) (time.Time, error) {
 	}
 }
 
-// Custom types for database models
-type User struct {
+// Database models with DB suffix to avoid conflicts with GraphQL generated models
+type UserDB struct {
 	ID        string    `json:"id" db:"id"`
 	Email     string    `json:"email" db:"email"`
 	Name      *string   `json:"name" db:"name"`
@@ -35,7 +33,7 @@ type User struct {
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-type Project struct {
+type ProjectDB struct {
 	ID          string        `json:"id" db:"id"`
 	Name        string        `json:"name" db:"name"`
 	Description *string       `json:"description" db:"description"`
@@ -45,7 +43,7 @@ type Project struct {
 	UpdatedAt   time.Time     `json:"updatedAt" db:"updated_at"`
 }
 
-type Board struct {
+type BoardDB struct {
 	ID          string    `json:"id" db:"id"`
 	Name        string    `json:"name" db:"name"`
 	Description *string   `json:"description" db:"description"`
@@ -54,7 +52,7 @@ type Board struct {
 	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-type Asset struct {
+type AssetDB struct {
 	ID         string      `json:"id" db:"id"`
 	Name       string      `json:"name" db:"name"`
 	Type       AssetType   `json:"type" db:"type"`
@@ -67,10 +65,69 @@ type Asset struct {
 	UpdatedAt  time.Time   `json:"updatedAt" db:"updated_at"`
 }
 
-type ChatMessage struct {
+type ChatMessageDB struct {
 	ID        string    `json:"id" db:"id"`
 	Content   string    `json:"content" db:"content"`
 	UserID    string    `json:"userId" db:"user_id"`
 	BoardID   string    `json:"boardId" db:"board_id"`
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+}
+
+// Conversion functions from DB models to GraphQL models
+func (u *UserDB) ToGraphQL() *User {
+	return &User{
+		ID:        u.ID,
+		Email:     u.Email,
+		Name:      u.Name,
+		Avatar:    u.Avatar,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}
+
+func (p *ProjectDB) ToGraphQL() *Project {
+	return &Project{
+		ID:          p.ID,
+		Name:        p.Name,
+		Description: p.Description,
+		Status:      p.Status,
+		OwnerID:     p.OwnerID,
+		CreatedAt:   p.CreatedAt,
+		UpdatedAt:   p.UpdatedAt,
+	}
+}
+
+func (b *BoardDB) ToGraphQL() *Board {
+	return &Board{
+		ID:          b.ID,
+		Name:        b.Name,
+		Description: b.Description,
+		ProjectID:   b.ProjectID,
+		CreatedAt:   b.CreatedAt,
+		UpdatedAt:   b.UpdatedAt,
+	}
+}
+
+func (a *AssetDB) ToGraphQL() *Asset {
+	return &Asset{
+		ID:         a.ID,
+		Name:       a.Name,
+		Type:       a.Type,
+		URL:        a.URL,
+		Status:     a.Status,
+		BoardID:    a.BoardID,
+		ApprovedAt: a.ApprovedAt,
+		CreatedAt:  a.CreatedAt,
+		UpdatedAt:  a.UpdatedAt,
+	}
+}
+
+func (c *ChatMessageDB) ToGraphQL() *ChatMessage {
+	return &ChatMessage{
+		ID:        c.ID,
+		Content:   c.Content,
+		UserID:    c.UserID,
+		BoardID:   c.BoardID,
+		CreatedAt: c.CreatedAt,
+	}
 } 
