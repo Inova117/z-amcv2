@@ -8,12 +8,15 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from '@/store/authStore';
 import { useNotificationSubscriptions } from '@/hooks/useNotificationSubscriptions';
 import { LoginForm } from '@/components/auth/LoginForm';
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingPage } from '@/components/ui/LoadingSpinner';
+import { PWAInstallPrompt } from '@/components/ui/PWAInstallPrompt';
 import { CampaignBuilderPage } from '@/pages/CampaignBuilderPage';
 import { AssetManagerPage } from '@/pages/AssetManagerPage';
 import { AnalyticsPage } from '@/pages/AnalyticsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { TestingPage } from '@/pages/TestingPage';
 import Board from "./pages/Board";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
@@ -30,7 +33,7 @@ const queryClient = new QueryClient({
 
 // Separate the authenticated app component to properly use hooks
 const AuthenticatedApp = () => {
-  const { isAuthenticated, isLoading, initialize } = useAuthStore();
+  const { user, isAuthenticated, isLoading, initialize } = useAuthStore();
   
   // Initialize notification subscriptions
   useNotificationSubscriptions();
@@ -46,6 +49,11 @@ const AuthenticatedApp = () => {
 
   if (!isAuthenticated) {
     return <LoginForm />;
+  }
+
+  // Show onboarding if user hasn't completed it
+  if (!user?.onboardingCompleted) {
+    return <OnboardingWizard />;
   }
 
   return (
@@ -64,9 +72,13 @@ const AuthenticatedApp = () => {
               <Route path="/campaigns/:id/edit" element={<CampaignBuilderPage />} />
               <Route path="/assets" element={<AssetManagerPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/testing" element={<TestingPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </DashboardLayout>
+          
+          {/* PWA Install Prompt */}
+          <PWAInstallPrompt />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

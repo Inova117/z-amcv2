@@ -14,6 +14,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useCampaignStore } from '@/store/campaignStore';
 import { useCampaignOperations } from '@/hooks/useCampaignOperations';
@@ -44,6 +45,7 @@ import { CreativesSection } from './sections/CreativesSection';
 import { ScheduleSection } from './sections/ScheduleSection';
 import { CampaignPreview } from './CampaignPreview';
 import { ValidationPanel } from './ValidationPanel';
+import { CampaignApprovalWorkflow } from './CampaignApprovalWorkflow';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignBuilderProps {
@@ -81,6 +83,7 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({
   } = useCampaignOperations();
 
   const [showPreview, setShowPreview] = useState(false);
+  const [showApproval, setShowApproval] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
 
   const sensors = useSensors(
@@ -164,8 +167,13 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({
   const handleLaunch = async () => {
     await validateCampaign(formData);
     if (validationErrors.filter(e => e.severity === 'error').length === 0) {
-      if (onLaunch) onLaunch();
+      setShowApproval(true);
     }
+  };
+
+  const handleApprovalComplete = () => {
+    setShowApproval(false);
+    if (onLaunch) onLaunch();
   };
 
   const completedSections = sections.filter(s => s.completed).length;
@@ -424,6 +432,29 @@ export const CampaignBuilder: React.FC<CampaignBuilderProps> = ({
           onClose={() => setShowPreview(false)}
           onLaunch={handleLaunch}
         />
+      )}
+
+      {/* Approval Workflow Modal */}
+      {showApproval && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Campaign Approval</h2>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowApproval(false)}
+                >
+                  Close
+                </Button>
+              </div>
+              <CampaignApprovalWorkflow
+                campaignId={currentCampaign?.id || 'new-campaign'}
+                onApprovalComplete={handleApprovalComplete}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

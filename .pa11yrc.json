@@ -1,0 +1,45 @@
+{
+  "standard": "WCAG2AA",
+  "level": "error",
+  "reporter": "cli",
+  "includeNotices": false,
+  "includeWarnings": true,
+  "chromeLaunchConfig": {
+    "ignoreHTTPSErrors": false,
+    "headless": true
+  },
+  "actions": [
+    "wait for element #main-content to be visible",
+    "wait for 2000"
+  ],
+  "hideElements": [
+    ".loading-spinner",
+    ".skeleton"
+  ],
+  "rules": [
+    "color-contrast",
+    "keyboard",
+    "aria-*",
+    "heading-order",
+    "landmark-*",
+    "link-*",
+    "button-*",
+    "form-*",
+    "image-*",
+    "table-*"
+  ],
+  "ignore": [
+    "notice",
+    "WCAG2AA.Principle1.Guideline1_4.1_4_3.G18.Abs",
+    "WCAG2AA.Principle1.Guideline1_4.1_4_3.G145.Abs"
+  ],
+  "urls": [
+    "http://localhost:8080",
+    "http://localhost:8080/board",
+    "http://localhost:8080/analytics",
+    "http://localhost:8080/campaigns/new",
+    "http://localhost:8080/assets",
+    "http://localhost:8080/settings",
+    "http://localhost:8080/testing"
+  ]
+} 
