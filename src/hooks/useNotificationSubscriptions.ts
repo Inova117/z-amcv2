@@ -22,40 +22,58 @@ export const useNotificationSubscriptions = () => {
     }
 
     // Clean up existing subscriptions
-    subscriptionsRef.current.forEach(unsubscribe => unsubscribe());
+    subscriptionsRef.current.forEach(unsubscribe => {
+      try {
+        unsubscribe();
+      } catch (error) {
+        console.warn('Error unsubscribing from notification:', error);
+      }
+    });
     subscriptionsRef.current = [];
 
-    // User-specific notifications subscription
-    const userNotificationsUnsubscribe = graphqlClient.subscribe(
-      USER_NOTIFICATIONS.loc?.source.body || '',
-      {}
-    );
+    // Only initialize subscriptions if WebSocket is connected or in development mode
+    if (!graphqlClient.isWebSocketConnected() && !import.meta.env.DEV) {
+      console.log('WebSocket not connected, skipping notification subscriptions');
+      return;
+    }
 
-    // System notifications subscription
-    const systemNotificationsUnsubscribe = graphqlClient.subscribe(
-      SYSTEM_NOTIFICATIONS.loc?.source.body || '',
-      {}
-    );
+    try {
+      // User-specific notifications subscription
+      const userNotificationsUnsubscribe = graphqlClient.subscribe(
+        USER_NOTIFICATIONS.loc?.source.body || '',
+        {}
+      );
 
-    // AI recommendations subscription
-    const aiRecommendationsUnsubscribe = graphqlClient.subscribe(
-      AI_RECOMMENDATION_GENERATED.loc?.source.body || '',
-      { userId: user.id }
-    );
+      // System notifications subscription
+      const systemNotificationsUnsubscribe = graphqlClient.subscribe(
+        SYSTEM_NOTIFICATIONS.loc?.source.body || '',
+        {}
+      );
 
-    // Platform connection status subscription
-    const platformStatusUnsubscribe = graphqlClient.subscribe(
-      PLATFORM_CONNECTION_STATUS.loc?.source.body || '',
-      { userId: user.id }
-    );
+      // AI recommendations subscription
+      const aiRecommendationsUnsubscribe = graphqlClient.subscribe(
+        AI_RECOMMENDATION_GENERATED.loc?.source.body || '',
+        { userId: user.id }
+      );
 
-    // Store unsubscribe functions
-    subscriptionsRef.current = [
-      userNotificationsUnsubscribe,
-      systemNotificationsUnsubscribe,
-      aiRecommendationsUnsubscribe,
-      platformStatusUnsubscribe,
-    ];
+      // Platform connection status subscription
+      const platformStatusUnsubscribe = graphqlClient.subscribe(
+        PLATFORM_CONNECTION_STATUS.loc?.source.body || '',
+        { userId: user.id }
+      );
+
+      // Store unsubscribe functions
+      subscriptionsRef.current = [
+        userNotificationsUnsubscribe,
+        systemNotificationsUnsubscribe,
+        aiRecommendationsUnsubscribe,
+        platformStatusUnsubscribe,
+      ].filter(Boolean); // Filter out any undefined subscriptions
+
+      console.log('Notification subscriptions initialized for user:', user.id);
+    } catch (error) {
+      console.error('Failed to initialize notification subscriptions:', error);
+    }
 
     // Mock subscription handlers for demo purposes
     // In a real implementation, these would be handled by the GraphQL client

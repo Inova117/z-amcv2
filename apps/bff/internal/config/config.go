@@ -20,7 +20,7 @@ func Load() *Config {
 		Port:               getEnv("PORT", "8080"),
 		DatabaseURL:        getEnv("DATABASE_URL", "postgresql://postgres:password@localhost:54322/postgres"),
 		NatsURL:           getEnv("NATS_URL", "nats://localhost:4222"),
-		SupabaseURL:       getEnv("SUPABASE_URL", "https://zklzwarmswkakaeglpdi.supabase.co"),
+		SupabaseURL:       getEnv("SUPABASE_URL", ""),
 		SupabaseServiceKey: getEnv("SUPABASE_SERVICE_KEY", ""),
 		SupabaseJWTSecret: getEnv("SUPABASE_JWT_SECRET", ""),
 		CorsOrigins:       getEnv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000"),

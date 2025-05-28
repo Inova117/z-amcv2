@@ -1,4 +1,3 @@
-
 # Default values for zamc-web chart
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
@@ -66,14 +65,20 @@ ingress:
   #    hosts:
   #      - zamc-web.example.com
 
-# Environment variables
+# Environment variables - SECURITY: Secrets moved to Kubernetes secrets
 env:
   - name: VITE_APP_ENV
     value: production
   - name: VITE_SUPABASE_URL
-    value: "https://zklzwarmswkakaeglpdi.supabase.co"
+    valueFrom:
+      secretKeyRef:
+        name: zamc-secrets
+        key: supabase-url
   - name: VITE_SUPABASE_ANON_KEY
-    value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprbHp3YXJtc3drYWthZWdscGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NzYyOTcsImV4cCI6MjA2MzU1MjI5N30.CY7gaFldCuro-WN5kd7MPSrtaT_uCSKlMUrwjaGXs_I"
+    valueFrom:
+      secretKeyRef:
+        name: zamc-secrets
+        key: supabase-anon-key
 
 # Node selector for pod scheduling
 nodeSelector: {}

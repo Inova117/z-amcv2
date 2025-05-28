@@ -1,0 +1,342 @@
+{{- if .Values.networkPolicy.enabled }}
+# Web Frontend Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "zamc.fullname" . }}-web-netpol
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    component: web
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "zamc.selectorLabels" . | nindent 6 }}
+      component: web
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: bff
+    ports:
+    - protocol: TCP
+      port: 4000
+  - to: []  # Allow DNS resolution
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# BFF API Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "zamc.fullname" . }}-bff-netpol
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    component: bff
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "zamc.selectorLabels" . | nindent 6 }}
+      component: bff
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: web
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 4000
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: postgresql
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: nats
+    ports:
+    - protocol: TCP
+      port: 4222
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: orchestrator
+    ports:
+    - protocol: TCP
+      port: 8001
+  - to: []  # Allow DNS resolution
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# Orchestrator Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "zamc.fullname" . }}-orchestrator-netpol
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    component: orchestrator
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "zamc.selectorLabels" . | nindent 6 }}
+      component: orchestrator
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: bff
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: connectors
+    ports:
+    - protocol: TCP
+      port: 8001
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: nats
+    ports:
+    - protocol: TCP
+      port: 4222
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: qdrant
+    ports:
+    - protocol: TCP
+      port: 6333
+  - to: []  # Allow external API calls (OpenAI, etc.)
+    ports:
+    - protocol: TCP
+      port: 443
+  - to: []  # Allow DNS resolution
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# Connectors Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "zamc.fullname" . }}-connectors-netpol
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    component: connectors
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "zamc.selectorLabels" . | nindent 6 }}
+      component: connectors
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: orchestrator
+    ports:
+    - protocol: TCP
+      port: 8002
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: nats
+    ports:
+    - protocol: TCP
+      port: 4222
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: orchestrator
+    ports:
+    - protocol: TCP
+      port: 8001
+  - to: []  # Allow external platform API calls (Google Ads, Meta, etc.)
+    ports:
+    - protocol: TCP
+      port: 443
+  - to: []  # Allow DNS resolution
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# Database Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "zamc.fullname" . }}-database-netpol
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    component: database
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: bff
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+# Redis Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "zamc.fullname" . }}-redis-netpol
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    component: redis
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: bff
+    ports:
+    - protocol: TCP
+      port: 6379
+
+---
+# NATS Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "zamc.fullname" . }}-nats-netpol
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    component: nats
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: nats
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: bff
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: orchestrator
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+          component: connectors
+    ports:
+    - protocol: TCP
+      port: 4222
+    - protocol: TCP
+      port: 8222  # Management port
+
+---
+# Monitoring Network Policy (if enabled)
+{{- if .Values.monitoring.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "zamc.fullname" . }}-monitoring-netpol
+  labels:
+    {{- include "zamc.labels" . | nindent 4 }}
+    component: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: grafana
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "zamc.selectorLabels" . | nindent 10 }}
+    ports:
+    - protocol: TCP
+      port: 4000  # BFF metrics
+    - protocol: TCP
+      port: 8001  # Orchestrator metrics
+    - protocol: TCP
+      port: 8002  # Connectors metrics
+  - to: []  # Allow DNS resolution
+    ports:
+    - protocol: UDP
+      port: 53
+{{- end }}
+{{- end }} 

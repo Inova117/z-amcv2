@@ -1,4 +1,3 @@
-
 import React, { StrictMode, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,6 +11,7 @@ import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingPage } from '@/components/ui/LoadingSpinner';
 import { PWAInstallPrompt } from '@/components/ui/PWAInstallPrompt';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { CampaignBuilderPage } from '@/pages/CampaignBuilderPage';
 import { AssetManagerPage } from '@/pages/AssetManagerPage';
 import { AnalyticsPage } from '@/pages/AnalyticsPage';
@@ -65,6 +65,7 @@ const AuthenticatedApp = () => {
           <DashboardLayout>
             <Routes>
               <Route path="/" element={<Navigate to="/board" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/board" replace />} />
               <Route path="/board" element={<Board />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/chat" element={<Chat />} />
@@ -85,11 +86,13 @@ const AuthenticatedApp = () => {
   );
 };
 
-// Main App component doesn't use hooks directly
+// Main App component with error boundary
 const App = () => {
   return (
     <StrictMode>
-      <AuthenticatedApp />
+      <ErrorBoundary>
+        <AuthenticatedApp />
+      </ErrorBoundary>
     </StrictMode>
   );
 };

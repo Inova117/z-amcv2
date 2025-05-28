@@ -1,55 +1,57 @@
 # Build stage
 FROM python:3.11-slim AS builder
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install system dependencies
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Create app user for security
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
 # Set working directory
 WORKDIR /app
 
-# Copy requirements
+# Copy requirements first for better caching
 COPY requirements.txt ./
-COPY requirements-dev.txt ./
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Copy source code
+COPY . .
 
 # Production stage
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/app/.venv/bin:$PATH"
-
-# Install runtime dependencies
+# Install security updates and runtime dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
+    dumb-init \
+    && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/* \
-    && groupadd -r appuser && useradd -r -g appuser appuser
+    && apt-get clean
+
+# Create app user for security
+RUN groupadd -r -g 1001 appgroup && \
+    useradd -r -u 1001 -g appgroup -m -d /app -s /bin/bash appuser
 
 # Set working directory
 WORKDIR /app
 
 # Copy Python dependencies from builder
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder --chown=appuser:appgroup /root/.local /home/appuser/.local
 
 # Copy application code
-COPY . .
+COPY --from=builder --chown=appuser:appgroup /app .
 
-# Create data directory and set permissions
-RUN mkdir -p /app/data && \
-    chown -R appuser:appuser /app
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/logs /app/tmp && \
+    chown -R appuser:appgroup /app && \
+    chmod -R 755 /app
+
+# Add local bin to PATH
+ENV PATH=/home/appuser/.local/bin:$PATH
 
 # Switch to non-root user
 USER appuser
@@ -59,7 +61,10 @@ EXPOSE 8001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8001/health || exit 1
+    CMD python -c "import requests; requests.get('http://localhost:8001/health', timeout=5)" || exit 1
 
-# Run the application
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8001"] 
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"] 

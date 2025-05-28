@@ -78,9 +78,11 @@ bff:
     className: "nginx"
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
       nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
       nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
       nginx.ingress.kubernetes.io/websocket-services: "zamc-bff"
+      nginx.ingress.kubernetes.io/proxy-set-headers: "zamc/websocket-headers"
     hosts:
       - host: api.zamc.local
         paths:
@@ -92,10 +94,10 @@ bff:
           - api.zamc.local
   resources:
     limits:
-      cpu: 1500m
+      cpu: 2000m
       memory: 2Gi
     requests:
-      cpu: 750m
+      cpu: 1000m
       memory: 1Gi
   autoscaling:
     enabled: true
@@ -109,11 +111,8 @@ bff:
     ENVIRONMENT: production
     GRAPHQL_PLAYGROUND: "false"
     GRAPHQL_INTROSPECTION: "false"
-    WEBSOCKET_ENABLED: "true"
-    SUBSCRIPTION_KEEPALIVE: "30s"
-    MAX_SUBSCRIPTION_DEPTH: "10"
 
-# ZAMC Orchestrator Service - Enhanced for AI/ML and analytics
+# ZAMC Orchestrator Service - Enhanced AI/ML capabilities
 orchestrator:
   enabled: true
   replicaCount: 2
@@ -127,31 +126,26 @@ orchestrator:
     targetPort: 8001
   resources:
     limits:
-      cpu: 3000m
+      cpu: 4000m
       memory: 4Gi
     requests:
-      cpu: 1500m
+      cpu: 2000m
       memory: 2Gi
   autoscaling:
     enabled: true
     minReplicas: 2
     maxReplicas: 8
-    targetCPUUtilizationPercentage: 70
-    targetMemoryUtilizationPercentage: 80
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 85
   env:
     PORT: "8001"
     LOG_LEVEL: info
     ENVIRONMENT: production
-    MAX_CONCURRENT_STRATEGIES: "8"
-    STRATEGY_TIMEOUT: "300"
-    CONTENT_GENERATION_TIMEOUT: "120"
-    CAMPAIGN_MONITORING_ENABLED: "true"
-    CAMPAIGN_MONITORING_INTERVAL: "30"
-    PERFORMANCE_ALERT_THRESHOLDS: "roas:2.0,ctr:1.0,cpc:2.0"
-    ANALYTICS_BATCH_SIZE: "100"
-    ANALYTICS_FLUSH_INTERVAL: "60"
+    MAX_CONCURRENT_STRATEGIES: "10"
+    STRATEGY_TIMEOUT: "600"
+    CONTENT_GENERATION_TIMEOUT: "180"
 
-# ZAMC Connectors Service - Optimized for platform integrations
+# ZAMC Connectors Service - Enhanced platform integrations
 connectors:
   enabled: true
   replicaCount: 3
@@ -165,11 +159,11 @@ connectors:
     targetPort: 8002
   resources:
     limits:
-      cpu: 1500m
-      memory: 1.5Gi
+      cpu: 2000m
+      memory: 2Gi
     requests:
-      cpu: 750m
-      memory: 768Mi
+      cpu: 1000m
+      memory: 1Gi
   autoscaling:
     enabled: true
     minReplicas: 3
@@ -180,29 +174,261 @@ connectors:
     PORT: "8002"
     LOG_LEVEL: info
     ENVIRONMENT: production
-    MAX_RETRY_ATTEMPTS: "3"
-    RETRY_DELAY_SECONDS: "5"
-    DEPLOYMENT_TIMEOUT_SECONDS: "300"
-    METRICS_COLLECTION_ENABLED: "true"
-    METRICS_COLLECTION_INTERVAL: "60"
+    MAX_RETRY_ATTEMPTS: "5"
+    RETRY_DELAY_SECONDS: "10"
+    DEPLOYMENT_TIMEOUT_SECONDS: "600"
 
 # =============================================================================
 # Infrastructure Dependencies
 # =============================================================================
 
-# PostgreSQL Database
+# PostgreSQL Database - Production-ready configuration with enhanced security
 postgresql:
   enabled: true
   auth:
-    postgresPassword: "zamc-postgres-password"
+    postgresPassword: "CHANGE_ME_SECURE_POSTGRES_PASSWORD"
     username: "zamc"
-    password: "zamc-password"
+    password: "CHANGE_ME_SECURE_ZAMC_PASSWORD"
     database: "zamc"
+    # Enable password encryption
+    enablePostgresUser: true
+    postgresPasswordEncrypted: false
   primary:
     persistence:
       enabled: true
-      size: 20Gi
-      storageClass: ""
+      size: 50Gi
+      # Enable encryption at rest
+      storageClass: "encrypted-ssd"
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    # Enhanced security configuration
+    configuration: |
+      # Connection and Authentication
+      max_connections = 200
+      ssl = on
+      ssl_cert_file = '/opt/bitnami/postgresql/certs/tls.crt'
+      ssl_key_file = '/opt/bitnami/postgresql/certs/tls.key'
+      ssl_ca_file = '/opt/bitnami/postgresql/certs/ca.crt'
+      ssl_ciphers = 'HIGH:MEDIUM:+3DES:!aNULL'
+      ssl_prefer_server_ciphers = on
+      ssl_min_protocol_version = 'TLSv1.2'
+      
+      # Memory and Performance
+      shared_buffers = 1GB
+      effective_cache_size = 3GB
+      maintenance_work_mem = 256MB
+      checkpoint_completion_target = 0.9
+      wal_buffers = 16MB
+      default_statistics_target = 100
+      random_page_cost = 1.1
+      effective_io_concurrency = 200
+      work_mem = 4MB
+      min_wal_size = 1GB
+      max_wal_size = 4GB
+      
+      # Security and Auditing
+      log_statement = 'all'
+      log_min_duration_statement = 0
+      log_connections = on
+      log_disconnections = on
+      log_hostname = on
+      log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+      
+      # Enable pg_audit extension for detailed auditing
+      shared_preload_libraries = 'pg_audit'
+      pg_audit.log = 'all'
+      pg_audit.log_catalog = off
+      pg_audit.log_parameter = on
+      pg_audit.log_statement_once = on
+      
+      # WAL and Backup Security
+      wal_level = replica
+      archive_mode = on
+      archive_command = 'test ! -f /backup/archive/%f && cp %p /backup/archive/%f'
+      
+      # Row Level Security
+      row_security = on
+      
+      # Connection Security
+      password_encryption = scram-sha-256
+      
+    # TLS/SSL Configuration
+    tls:
+      enabled: true
+      certificatesSecret: "postgresql-tls"
+      certFilename: "tls.crt"
+      certKeyFilename: "tls.key"
+      certCAFilename: "ca.crt"
+    
+    # Security Context
+    securityContext:
+      enabled: true
+      fsGroup: 1001
+      runAsUser: 1001
+      runAsNonRoot: true
+    
+    # Pod Security Context
+    podSecurityContext:
+      enabled: true
+      fsGroup: 1001
+      runAsUser: 1001
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+          - ALL
+    
+    # Network Policies
+    networkPolicy:
+      enabled: true
+      allowExternal: false
+      ingressRules:
+        - from:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: zamc-bff
+        - from:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: zamc-orchestrator
+    
+    # Backup Configuration with Encryption
+    backup:
+      enabled: true
+      schedule: "0 2 * * *"  # Daily at 2 AM
+      encryption:
+        enabled: true
+        secretName: "backup-encryption-key"
+      retention:
+        days: 30
+        weeks: 4
+        months: 12
+    
+    # Monitoring and Health Checks
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
+    
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
+    
+  # Read Replicas for Load Distribution
+  readReplicas:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 50Gi
+      storageClass: "encrypted-ssd"
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    
+  # Metrics and Monitoring
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+    prometheusRule:
+      enabled: true
+      rules:
+        - alert: PostgreSQLDown
+          expr: pg_up == 0
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: PostgreSQL instance is down
+        - alert: PostgreSQLHighConnections
+          expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: PostgreSQL high connection usage
+        - alert: PostgreSQLSlowQueries
+          expr: pg_stat_activity_max_tx_duration > 300
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: PostgreSQL slow queries detected
+  
+  # Audit Configuration
+  audit:
+    enabled: true
+    logLevel: "INFO"
+    logDestination: "syslog"
+    logConnections: true
+    logDisconnections: true
+    logStatements: "all"
+    logDuration: true
+
+# Redis Cache - High-performance configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "CHANGE_ME_SECURE_REDIS_PASSWORD"
+  master:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+# NATS Message Queue - Optimized for real-time messaging
+nats:
+  enabled: true
+  nats:
+    image: nats:2.10-alpine
+    jetstream:
+      enabled: true
+      memStorage:
+        enabled: true
+        size: 2Gi
+      fileStorage:
+        enabled: true
+        size: 10Gi
     resources:
       limits:
         cpu: 1000m
@@ -210,71 +436,21 @@ postgresql:
       requests:
         cpu: 500m
         memory: 512Mi
-  metrics:
+  cluster:
     enabled: true
-    serviceMonitor:
-      enabled: true
-
-# Redis Cache
-redis:
-  enabled: true
-  auth:
-    enabled: true
-    password: "zamc-redis-password"
-  master:
-    persistence:
-      enabled: true
-      size: 8Gi
-      storageClass: ""
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 250m
-        memory: 256Mi
-  metrics:
-    enabled: true
-    serviceMonitor:
-      enabled: true
-
-# NATS Message Broker
-nats:
-  enabled: true
-  nats:
-    jetstream:
-      enabled: true
-      fileStore:
-        pvc:
-          size: 10Gi
-          storageClassName: ""
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 250m
-        memory: 256Mi
-  natsBox:
+    replicas: 3
+  natsbox:
     enabled: true
 
-# Qdrant Vector Database
+# Qdrant Vector Database - For AI/ML embeddings
 qdrant:
   enabled: true
-  replicaCount: 1
   image:
     repository: qdrant/qdrant
-    tag: "latest"
-    pullPolicy: IfNotPresent
-  service:
-    type: ClusterIP
-    port: 6333
-    targetPort: 6333
-    grpcPort: 6334
+    tag: "v1.7.0"
   persistence:
     enabled: true
     size: 20Gi
-    storageClass: ""
   resources:
     limits:
       cpu: 2000m
@@ -284,10 +460,9 @@ qdrant:
       memory: 2Gi
 
 # =============================================================================
-# Secrets and Configuration
+# Security Configuration - CRITICAL: All secrets must be externally managed
 # =============================================================================
 
-# Secrets configuration
 secrets:
   # Database secrets
   database:
@@ -301,9 +476,9 @@ secrets:
   nats:
     url: "nats://zamc-nats:4222"
   
-  # JWT secrets
+  # JWT secrets - SECURITY: MUST be set to a cryptographically secure value
   jwt:
-    secret: "your-super-secure-jwt-secret-key-change-in-production"
+    secret: "REQUIRED_SECURE_JWT_SECRET_MINIMUM_256_BITS"
   
   # AI API keys (set these in your values override file)
   ai:
@@ -369,21 +544,21 @@ ingress:
 # Security Configuration
 # =============================================================================
 
-# Pod Security Context
-podSecurityContext:
-  fsGroup: 2000
+# Pod Security Standards
+podSecurityPolicy:
+  enabled: true
+
+# Security Context for all pods
+securityContext:
   runAsNonRoot: true
   runAsUser: 1000
-
-# Security Context
-securityContext:
-  allowPrivilegeEscalation: false
+  runAsGroup: 1000
+  fsGroup: 1000
   capabilities:
     drop:
-    - ALL
+      - ALL
   readOnlyRootFilesystem: true
-  runAsNonRoot: true
-  runAsUser: 1000
+  allowPrivilegeEscalation: false
 
 # Network Policies
 networkPolicy:
@@ -392,6 +567,12 @@ networkPolicy:
     enabled: true
   egress:
     enabled: true
+
+# Service Mesh (if using Istio)
+serviceMesh:
+  enabled: false
+  istio:
+    enabled: false
 
 # =============================================================================
 # Storage Configuration

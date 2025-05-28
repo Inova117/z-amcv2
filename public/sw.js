@@ -49,7 +49,7 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-              console.log('Service Worker: Deleting old cache', cacheName);
+              console.log('Service Worker: Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
@@ -77,6 +77,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip WebSocket connections
+  if (request.headers.get('upgrade') === 'websocket') {
+    return;
+  }
+
   // Handle different types of requests
   if (isStaticAsset(request)) {
     event.respondWith(cacheFirst(request));
@@ -89,7 +94,7 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// Cache strategies
+// Cache first strategy for static assets
 async function cacheFirst(request) {
   try {
     const cachedResponse = await caches.match(request);
@@ -105,10 +110,11 @@ async function cacheFirst(request) {
     return networkResponse;
   } catch (error) {
     console.error('Cache first strategy failed:', error);
-    return new Response('Offline content not available', { status: 503 });
+    return new Response('Offline', { status: 503 });
   }
 }
 
+// Network first strategy for API requests
 async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);
@@ -123,48 +129,44 @@ async function networkFirst(request) {
     if (cachedResponse) {
       return cachedResponse;
     }
-    
-    // Return offline fallback for API requests
-    return new Response(
-      JSON.stringify({
-        error: 'Offline',
-        message: 'This feature requires an internet connection',
-        offline: true
-      }),
-      {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    return new Response('Offline', { status: 503 });
   }
 }
 
+// Stale while revalidate strategy
 async function staleWhileRevalidate(request) {
-  const cache = await caches.open(DYNAMIC_CACHE);
-  const cachedResponse = await cache.match(request);
-  
-  const fetchPromise = fetch(request).then((networkResponse) => {
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  }).catch(() => cachedResponse);
-  
-  return cachedResponse || fetchPromise;
+  try {
+    const cachedResponse = await caches.match(request);
+    const networkResponsePromise = fetch(request).then((response) => {
+      if (response.ok) {
+        const cache = caches.open(DYNAMIC_CACHE);
+        cache.then(c => c.put(request, response.clone()));
+      }
+      return response;
+    });
+
+    return cachedResponse || networkResponsePromise;
+  } catch (error) {
+    console.error('Stale while revalidate failed:', error);
+    return new Response('Offline', { status: 503 });
+  }
 }
 
+// Navigation handler for SPA routing
 async function navigationHandler(request) {
   try {
+    // Try network first for navigation requests
     const networkResponse = await fetch(request);
     return networkResponse;
   } catch (error) {
-    // Return cached index.html for navigation requests when offline
+    console.log('Navigation network failed, serving cached index.html');
+    // Fallback to cached index.html for SPA routing
     const cachedResponse = await caches.match('/index.html');
     if (cachedResponse) {
       return cachedResponse;
     }
     
-    // Fallback offline page
+    // If no cached index.html, return a basic offline page
     return new Response(`
       <!DOCTYPE html>
       <html>
@@ -172,43 +174,18 @@ async function navigationHandler(request) {
           <title>ZAMC - Offline</title>
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <style>
-            body { 
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              display: flex; 
-              align-items: center; 
-              justify-content: center; 
-              min-height: 100vh; 
-              margin: 0; 
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              text-align: center;
-              padding: 20px;
-            }
-            .container { max-width: 400px; }
-            h1 { font-size: 2rem; margin-bottom: 1rem; }
-            p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
-            button { 
-              background: white; 
-              color: #667eea; 
-              border: none; 
-              padding: 12px 24px; 
-              border-radius: 6px; 
-              font-size: 1rem; 
-              cursor: pointer;
-              font-weight: 600;
-            }
-            button:hover { opacity: 0.9; }
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .offline { color: #666; }
           </style>
         </head>
         <body>
-          <div class="container">
-            <h1>🌐 You're Offline</h1>
-            <p>ZAMC requires an internet connection to function properly. Please check your connection and try again.</p>
-            <button onclick="window.location.reload()">Try Again</button>
-          </div>
+          <h1>ZAMC</h1>
+          <p class="offline">You're currently offline. Please check your connection.</p>
+          <button onclick="window.location.reload()">Retry</button>
         </body>
       </html>
     `, {
+      status: 200,
       headers: { 'Content-Type': 'text/html' }
     });
   }
@@ -222,9 +199,9 @@ function isStaticAsset(request) {
 
 function isAPIRequest(request) {
   const url = new URL(request.url);
-  return API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname)) ||
-         url.pathname.startsWith('/api/') ||
-         url.pathname.startsWith('/graphql');
+  return url.pathname.startsWith('/api/') || 
+         url.pathname.startsWith('/graphql') ||
+         API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname));
 }
 
 function isNavigationRequest(request) {
@@ -293,9 +270,13 @@ self.addEventListener('push', (event) => {
   };
 
   if (event.data) {
-    const data = event.data.json();
-    options.body = data.body || options.body;
-    options.data = { ...options.data, ...data };
+    try {
+      const data = event.data.json();
+      options.body = data.body || options.body;
+      options.data = { ...options.data, ...data };
+    } catch (error) {
+      console.error('Failed to parse push data:', error);
+    }
   }
 
   event.waitUntil(
