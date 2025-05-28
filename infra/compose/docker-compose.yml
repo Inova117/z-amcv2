@@ -21,6 +21,14 @@ services:
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - zamc-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d zamc"]
       interval: 10s
@@ -38,6 +46,14 @@ services:
       - redis_data:/data
     networks:
       - zamc-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -65,6 +81,14 @@ services:
       - nats_data:/data
     networks:
       - zamc-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8222/healthz"]
       interval: 30s
@@ -72,11 +96,37 @@ services:
       retries: 3
       start_period: 10s
 
+  # Qdrant Vector Database for AI/ML workloads
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: zamc-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"  # gRPC port
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - zamc-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   # =============================================================================
   # ZAMC Application Services
   # =============================================================================
 
-  # ZAMC Web Frontend (React/Vite)
+  # ZAMC Web Frontend (React/Vite) - Optimized for analytics workloads
   zamc-web:
     build:
       context: ../../
@@ -89,6 +139,10 @@ services:
       - VITE_API_URL=http://localhost:4000/graphql
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-http://localhost:8000}
       - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      # Analytics and Performance Monitoring
+      - VITE_ENABLE_ANALYTICS=${VITE_ENABLE_ANALYTICS:-true}
+      - VITE_CAMPAIGN_PERFORMANCE_WS=${VITE_CAMPAIGN_PERFORMANCE_WS:-ws://localhost:4000/graphql}
+      - VITE_REAL_TIME_UPDATES=${VITE_REAL_TIME_UPDATES:-true}
     volumes:
       - ../../src:/app/src:ro
       - ../../public:/app/public:ro
@@ -101,14 +155,22 @@ services:
       - zamc-network
     depends_on:
       - zamc-bff
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
 
-  # BFF GraphQL API (Go)
+  # BFF GraphQL API (Go) - Enhanced for real-time subscriptions
   zamc-bff:
     build:
       context: ../../apps/bff
@@ -128,6 +190,10 @@ services:
       # GraphQL Configuration
       - GRAPHQL_PLAYGROUND=${GRAPHQL_PLAYGROUND:-true}
       - GRAPHQL_INTROSPECTION=${GRAPHQL_INTROSPECTION:-true}
+      # Real-time Configuration
+      - WEBSOCKET_ENABLED=${WEBSOCKET_ENABLED:-true}
+      - SUBSCRIPTION_KEEPALIVE=${SUBSCRIPTION_KEEPALIVE:-30s}
+      - MAX_SUBSCRIPTION_DEPTH=${MAX_SUBSCRIPTION_DEPTH:-10}
     env_file:
       - .env
     volumes:
@@ -141,6 +207,14 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
+        reservations:
+          cpus: '0.75'
+          memory: 1G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
       interval: 30s
@@ -148,7 +222,7 @@ services:
       retries: 3
       start_period: 30s
 
-  # Orchestrator Service (Python/FastAPI)
+  # Orchestrator Service (Python/FastAPI) - Enhanced for AI/ML and analytics
   zamc-orchestrator:
     build:
       context: ../../services/orchestrator
@@ -163,6 +237,7 @@ services:
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/zamc
       - REDIS_URL=redis://redis:6379
       - NATS_URL=nats://nats:4222
+      - QDRANT_URL=http://qdrant:6333
       # AI/ML Configuration
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
@@ -171,6 +246,13 @@ services:
       - MAX_CONCURRENT_STRATEGIES=${MAX_CONCURRENT_STRATEGIES:-5}
       - STRATEGY_TIMEOUT=${STRATEGY_TIMEOUT:-300}
       - CONTENT_GENERATION_TIMEOUT=${CONTENT_GENERATION_TIMEOUT:-120}
+      # Campaign Performance Monitoring
+      - CAMPAIGN_MONITORING_ENABLED=${CAMPAIGN_MONITORING_ENABLED:-true}
+      - CAMPAIGN_MONITORING_INTERVAL=${CAMPAIGN_MONITORING_INTERVAL:-30}
+      - PERFORMANCE_ALERT_THRESHOLDS=${PERFORMANCE_ALERT_THRESHOLDS:-roas:2.0,ctr:1.0,cpc:2.0}
+      # Analytics Configuration
+      - ANALYTICS_BATCH_SIZE=${ANALYTICS_BATCH_SIZE:-100}
+      - ANALYTICS_FLUSH_INTERVAL=${ANALYTICS_FLUSH_INTERVAL:-60}
     env_file:
       - .env
     volumes:
@@ -185,6 +267,16 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -192,7 +284,7 @@ services:
       retries: 3
       start_period: 30s
 
-  # Connectors Service (Go)
+  # Connectors Service (Go) - Optimized for platform integrations
   zamc-connectors:
     build:
       context: ../../services/connectors
@@ -224,6 +316,9 @@ services:
       - MAX_RETRY_ATTEMPTS=${MAX_RETRY_ATTEMPTS:-3}
       - RETRY_DELAY_SECONDS=${RETRY_DELAY_SECONDS:-5}
       - DEPLOYMENT_TIMEOUT_SECONDS=${DEPLOYMENT_TIMEOUT_SECONDS:-300}
+      # Performance Monitoring
+      - METRICS_COLLECTION_ENABLED=${METRICS_COLLECTION_ENABLED:-true}
+      - METRICS_COLLECTION_INTERVAL=${METRICS_COLLECTION_INTERVAL:-60}
     env_file:
       - .env
     volumes:
@@ -233,6 +328,14 @@ services:
     depends_on:
       nats:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     healthcheck:
       test: ["CMD", "/app/connectors", "--health-check"]
       interval: 30s
@@ -377,4 +480,6 @@ volumes:
   grafana_data:
     driver: local
   pgadmin_data:
+    driver: local
+  qdrant_data:
     driver: local 

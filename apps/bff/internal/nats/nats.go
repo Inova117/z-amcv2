@@ -41,4 +41,36 @@ func (c *Conn) SubscribeBoardUpdates(boardID string, handler func([]byte)) (*nat
 	return c.Subscribe(subject, func(msg *nats.Msg) {
 		handler(msg.Data)
 	})
+}
+
+func (c *Conn) SubscribeCampaignMetricsUpdated(projectID string, handler func([]byte)) (*nats.Subscription, error) {
+	subject := "zamc.events.campaign.metrics_updated"
+	
+	return c.Subscribe(subject, func(msg *nats.Msg) {
+		handler(msg.Data)
+	})
+}
+
+func (c *Conn) SubscribeCampaignPerformanceAlert(projectID string, handler func([]byte)) (*nats.Subscription, error) {
+	subject := "zamc.events.campaign.performance_alert"
+	
+	return c.Subscribe(subject, func(msg *nats.Msg) {
+		handler(msg.Data)
+	})
+}
+
+func (c *Conn) SubscribeCampaignBudgetExceeded(projectID string, handler func([]byte)) (*nats.Subscription, error) {
+	subject := "zamc.events.campaign.budget_exceeded"
+	
+	return c.Subscribe(subject, func(msg *nats.Msg) {
+		handler(msg.Data)
+	})
+}
+
+func (c *Conn) SubscribeCampaignPerformanceThreshold(projectID string, handler func([]byte)) (*nats.Subscription, error) {
+	subject := "zamc.events.campaign.performance_threshold"
+	
+	return c.Subscribe(subject, func(msg *nats.Msg) {
+		handler(msg.Data)
+	})
 } 

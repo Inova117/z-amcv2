@@ -9,7 +9,14 @@ from nats.aio.client import Client as NATSClient
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ..config import settings
-from ..models import AssetDraftCreatedEvent, PlanCreatedEvent
+from ..models import (
+    AssetDraftCreatedEvent,
+    CampaignBudgetExceededEvent,
+    CampaignMetricsUpdatedEvent,
+    CampaignPerformanceAlertEvent,
+    CampaignPerformanceThresholdEvent,
+    PlanCreatedEvent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +79,42 @@ class NATSService:
         """Publish plan created event."""
         return await self.publish_event(
             "events.plan.created",
+            event.model_dump()
+        )
+
+    async def publish_campaign_metrics_updated(
+        self, event: CampaignMetricsUpdatedEvent
+    ) -> bool:
+        """Publish campaign metrics updated event."""
+        return await self.publish_event(
+            "events.campaign.metrics_updated",
+            event.model_dump()
+        )
+
+    async def publish_campaign_performance_alert(
+        self, event: CampaignPerformanceAlertEvent
+    ) -> bool:
+        """Publish campaign performance alert event."""
+        return await self.publish_event(
+            "events.campaign.performance_alert",
+            event.model_dump()
+        )
+
+    async def publish_campaign_budget_exceeded(
+        self, event: CampaignBudgetExceededEvent
+    ) -> bool:
+        """Publish campaign budget exceeded event."""
+        return await self.publish_event(
+            "events.campaign.budget_exceeded",
+            event.model_dump()
+        )
+
+    async def publish_campaign_performance_threshold(
+        self, event: CampaignPerformanceThresholdEvent
+    ) -> bool:
+        """Publish campaign performance threshold event."""
+        return await self.publish_event(
+            "events.campaign.performance_threshold",
             event.model_dump()
         )
 

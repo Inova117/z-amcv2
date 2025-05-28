@@ -12,10 +12,10 @@ global:
 # Application Configuration
 # =============================================================================
 
-# ZAMC Web Frontend
+# ZAMC Web Frontend - Optimized for analytics workloads
 web:
   enabled: true
-  replicaCount: 2
+  replicaCount: 3
   image:
     repository: zamc/web
     tag: "1.0.0"
@@ -30,6 +30,8 @@ web:
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
     hosts:
       - host: zamc.local
         paths:
@@ -41,24 +43,28 @@ web:
           - zamc.local
   resources:
     limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
       cpu: 500m
       memory: 512Mi
-    requests:
-      cpu: 250m
-      memory: 256Mi
   autoscaling:
     enabled: true
-    minReplicas: 2
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 80
+    minReplicas: 3
+    maxReplicas: 15
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
   env:
     NODE_ENV: production
     VITE_API_URL: http://zamc-bff:4000/graphql
+    VITE_ENABLE_ANALYTICS: "true"
+    VITE_CAMPAIGN_PERFORMANCE_WS: "ws://zamc-bff:4000/graphql"
+    VITE_REAL_TIME_UPDATES: "true"
 
-# ZAMC BFF GraphQL API
+# ZAMC BFF GraphQL API - Enhanced for real-time subscriptions
 bff:
   enabled: true
-  replicaCount: 2
+  replicaCount: 3
   image:
     repository: zamc/bff
     tag: "1.0.0"
@@ -72,6 +78,9 @@ bff:
     className: "nginx"
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/websocket-services: "zamc-bff"
     hosts:
       - host: api.zamc.local
         paths:
@@ -83,24 +92,28 @@ bff:
           - api.zamc.local
   resources:
     limits:
-      cpu: 1000m
-      memory: 1Gi
+      cpu: 1500m
+      memory: 2Gi
     requests:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 750m
+      memory: 1Gi
   autoscaling:
     enabled: true
-    minReplicas: 2
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 80
+    minReplicas: 3
+    maxReplicas: 12
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
   env:
     PORT: "4000"
     LOG_LEVEL: info
     ENVIRONMENT: production
     GRAPHQL_PLAYGROUND: "false"
     GRAPHQL_INTROSPECTION: "false"
+    WEBSOCKET_ENABLED: "true"
+    SUBSCRIPTION_KEEPALIVE: "30s"
+    MAX_SUBSCRIPTION_DEPTH: "10"
 
-# ZAMC Orchestrator Service
+# ZAMC Orchestrator Service - Enhanced for AI/ML and analytics
 orchestrator:
   enabled: true
   replicaCount: 2
@@ -114,28 +127,34 @@ orchestrator:
     targetPort: 8001
   resources:
     limits:
-      cpu: 2000m
-      memory: 2Gi
+      cpu: 3000m
+      memory: 4Gi
     requests:
-      cpu: 1000m
-      memory: 1Gi
+      cpu: 1500m
+      memory: 2Gi
   autoscaling:
     enabled: true
     minReplicas: 2
-    maxReplicas: 5
-    targetCPUUtilizationPercentage: 80
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
   env:
     PORT: "8001"
     LOG_LEVEL: info
     ENVIRONMENT: production
-    MAX_CONCURRENT_STRATEGIES: "5"
+    MAX_CONCURRENT_STRATEGIES: "8"
     STRATEGY_TIMEOUT: "300"
     CONTENT_GENERATION_TIMEOUT: "120"
+    CAMPAIGN_MONITORING_ENABLED: "true"
+    CAMPAIGN_MONITORING_INTERVAL: "30"
+    PERFORMANCE_ALERT_THRESHOLDS: "roas:2.0,ctr:1.0,cpc:2.0"
+    ANALYTICS_BATCH_SIZE: "100"
+    ANALYTICS_FLUSH_INTERVAL: "60"
 
-# ZAMC Connectors Service
+# ZAMC Connectors Service - Optimized for platform integrations
 connectors:
   enabled: true
-  replicaCount: 2
+  replicaCount: 3
   image:
     repository: zamc/connectors
     tag: "1.0.0"
@@ -146,16 +165,17 @@ connectors:
     targetPort: 8002
   resources:
     limits:
-      cpu: 1000m
-      memory: 1Gi
+      cpu: 1500m
+      memory: 1.5Gi
     requests:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 750m
+      memory: 768Mi
   autoscaling:
     enabled: true
-    minReplicas: 2
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 80
+    minReplicas: 3
+    maxReplicas: 12
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
   env:
     PORT: "8002"
     LOG_LEVEL: info
@@ -163,6 +183,8 @@ connectors:
     MAX_RETRY_ATTEMPTS: "3"
     RETRY_DELAY_SECONDS: "5"
     DEPLOYMENT_TIMEOUT_SECONDS: "300"
+    METRICS_COLLECTION_ENABLED: "true"
+    METRICS_COLLECTION_INTERVAL: "60"
 
 # =============================================================================
 # Infrastructure Dependencies
@@ -235,6 +257,31 @@ nats:
         memory: 256Mi
   natsBox:
     enabled: true
+
+# Qdrant Vector Database
+qdrant:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: qdrant/qdrant
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 6333
+    targetPort: 6333
+    grpcPort: 6334
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: ""
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
 
 # =============================================================================
 # Secrets and Configuration

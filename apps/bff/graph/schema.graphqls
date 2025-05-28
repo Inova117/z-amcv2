@@ -116,9 +116,66 @@ type Mutation {
 type Subscription {
   # Subscribe to board updates (assets, chat messages, etc.)
   boardUpdated(boardId: ID!): BoardUpdate!
+  
+  # Subscribe to campaign performance metrics updates
+  campaignMetricsUpdated(projectId: ID!): CampaignMetricsUpdate!
+  
+  # Subscribe to campaign performance alerts
+  campaignPerformanceAlert(projectId: ID!): CampaignPerformanceAlert!
 }
 
 union BoardUpdate = Asset | ChatMessage
+
+# Campaign Performance Types
+type CampaignMetrics {
+  campaignId: ID!
+  campaignName: String!
+  platform: CampaignPlatform!
+  impressions: Int!
+  clicks: Int!
+  spend: Float!
+  conversions: Int!
+  revenue: Float!
+  ctr: Float!
+  cpc: Float!
+  cpm: Float!
+  roas: Float!
+  timestamp: Time!
+  date: String!
+}
+
+enum CampaignPlatform {
+  GOOGLE_ADS
+  META
+  LINKEDIN
+  TWITTER
+}
+
+type CampaignMetricsUpdate {
+  projectId: ID!
+  campaignId: ID!
+  metrics: CampaignMetrics!
+  timestamp: Time!
+}
+
+type CampaignPerformanceAlert {
+  alertId: ID!
+  projectId: ID!
+  campaignId: ID!
+  alertType: String!
+  severity: AlertSeverity!
+  message: String!
+  threshold: Float
+  currentValue: Float
+  timestamp: Time!
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
 
 input CreateProjectInput {
   name: String!

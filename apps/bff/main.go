@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -24,6 +26,8 @@ import (
 
 
 )
+
+var startTime = time.Now()
 
 func main() {
 	// Load environment variables
@@ -93,8 +97,36 @@ func main() {
 
 	// Health check endpoint
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		healthStatus := map[string]interface{}{
+			"status":    "healthy",
+			"timestamp": time.Now().Format(time.RFC3339),
+			"version":   "1.0.0",
+			"service":   "ZAMC BFF GraphQL API",
+			"services": map[string]string{
+				"database": "healthy", // TODO: Add actual database health check
+				"redis":    "healthy", // TODO: Add actual Redis health check
+				"nats":     "healthy", // TODO: Add actual NATS health check
+				"graphql":  "healthy",
+			},
+			"uptime": time.Since(startTime).String(),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		json.NewEncoder(w).Encode(healthStatus)
+	})
+
+	// Ready check endpoint
+	http.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+		readyStatus := map[string]interface{}{
+			"status":    "ready",
+			"timestamp": time.Now().Format(time.RFC3339),
+			"service":   "ZAMC BFF GraphQL API",
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(readyStatus)
 	})
 
 	log.Printf("Server starting on port %s", cfg.Port)

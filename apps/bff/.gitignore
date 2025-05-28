@@ -23,6 +23,10 @@ go.work
 .env
 .env.local
 .env.production
+.env.development
+.env.test
+.env.development.local
+.env.production.local
 
 # IDE files
 .vscode/
@@ -53,3 +57,8 @@ postgres_data/
 # Temporary files
 tmp/
 temp/ 
+
+# Node modules
+node_modules/
+
+# Go build cache

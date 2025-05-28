@@ -1,0 +1,144 @@
+{
+  "overview": {
+    "totalImpressions": 125000,
+    "totalClicks": 3250,
+    "totalConversions": 89,
+    "totalSpend": 2450.75,
+    "ctr": 2.6,
+    "cpc": 0.75,
+    "conversionRate": 2.74,
+    "costPerConversion": 27.54
+  },
+  "campaigns": [
+    {
+      "id": "campaign-1",
+      "name": "Product Launch Campaign",
+      "status": "active",
+      "impressions": 45000,
+      "clicks": 1200,
+      "conversions": 32,
+      "spend": 900.00,
+      "ctr": 2.67,
+      "cpc": 0.75,
+      "conversionRate": 2.67,
+      "platform": "google-ads"
+    },
+    {
+      "id": "campaign-2",
+      "name": "Brand Awareness Campaign",
+      "status": "active",
+      "impressions": 80000,
+      "clicks": 2050,
+      "conversions": 57,
+      "spend": 1550.75,
+      "ctr": 2.56,
+      "cpc": 0.76,
+      "conversionRate": 2.78,
+      "platform": "meta"
+    }
+  ],
+  "timeSeries": [
+    {
+      "date": "2024-01-01",
+      "impressions": 5000,
+      "clicks": 130,
+      "conversions": 4,
+      "spend": 97.50
+    },
+    {
+      "date": "2024-01-02",
+      "impressions": 5200,
+      "clicks": 135,
+      "conversions": 3,
+      "spend": 101.25
+    },
+    {
+      "date": "2024-01-03",
+      "impressions": 4800,
+      "clicks": 125,
+      "conversions": 5,
+      "spend": 93.75
+    },
+    {
+      "date": "2024-01-04",
+      "impressions": 5100,
+      "clicks": 132,
+      "conversions": 4,
+      "spend": 99.00
+    },
+    {
+      "date": "2024-01-05",
+      "impressions": 5300,
+      "clicks": 138,
+      "conversions": 6,
+      "spend": 103.50
+    }
+  ],
+  "demographics": {
+    "age": [
+      { "range": "18-24", "percentage": 15.2, "conversions": 12 },
+      { "range": "25-34", "percentage": 35.8, "conversions": 32 },
+      { "range": "35-44", "percentage": 28.4, "conversions": 25 },
+      { "range": "45-54", "percentage": 15.1, "conversions": 15 },
+      { "range": "55+", "percentage": 5.5, "conversions": 5 }
+    ],
+    "gender": [
+      { "type": "male", "percentage": 52.3, "conversions": 47 },
+      { "type": "female", "percentage": 45.7, "conversions": 40 },
+      { "type": "other", "percentage": 2.0, "conversions": 2 }
+    ],
+    "locations": [
+      { "country": "United States", "percentage": 45.2, "conversions": 40 },
+      { "country": "Canada", "percentage": 25.8, "conversions": 23 },
+      { "country": "United Kingdom", "percentage": 15.3, "conversions": 14 },
+      { "country": "Australia", "percentage": 8.7, "conversions": 8 },
+      { "country": "Other", "percentage": 5.0, "conversions": 4 }
+    ]
+  },
+  "keywords": [
+    {
+      "keyword": "marketing automation",
+      "impressions": 12000,
+      "clicks": 320,
+      "conversions": 15,
+      "cpc": 0.85,
+      "position": 2.3
+    },
+    {
+      "keyword": "campaign management",
+      "impressions": 8500,
+      "clicks": 210,
+      "conversions": 8,
+      "cpc": 0.72,
+      "position": 3.1
+    },
+    {
+      "keyword": "digital advertising",
+      "impressions": 15000,
+      "clicks": 380,
+      "conversions": 18,
+      "cpc": 0.68,
+      "position": 2.8
+    }
+  ],
+  "platforms": [
+    {
+      "name": "google-ads",
+      "impressions": 75000,
+      "clicks": 1950,
+      "conversions": 53,
+      "spend": 1462.50,
+      "ctr": 2.6,
+      "conversionRate": 2.72
+    },
+    {
+      "name": "meta",
+      "impressions": 50000,
+      "clicks": 1300,
+      "conversions": 36,
+      "spend": 988.25,
+      "ctr": 2.6,
+      "conversionRate": 2.77
+    }
+  ]
+} 

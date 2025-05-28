@@ -1,0 +1,1206 @@
+<testsuites id="" name="" tests="294" failures="0" skipped="294" errors="0" time="0.4643520000000001">
+<testsuite name="specs\auth.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="chromium" tests="25" failures="0" skipped="25" time="0" errors="0">
+<testcase name="Authentication Flow › Sign Up › should successfully sign up with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for empty form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for partial form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate email format" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate password strength" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show error for password mismatch" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle existing account error" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle network errors gracefully" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show loading state for slow networks" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should successfully sign in with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should show error for invalid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should validate required fields" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate Google sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate GitHub sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should send password reset email" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should validate email for password reset" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate between sign up and sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate to forgot password" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should support keyboard navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should have proper screen reader labels" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle concurrent sign up attempts" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle session timeout" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle browser back/forward navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should not expose sensitive data in network requests" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should implement rate limiting" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\complete-user-journey.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="chromium" tests="17" failures="0" skipped="17" time="0" errors="0">
+<testcase name="Complete User Journey › Complete user journey: Sign up → Connect platforms → Create campaign → Upload assets → Deploy → View analytics" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle platform connection failures gracefully" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle asset upload failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle campaign creation failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle deployment failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle analytics data loading failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should show appropriate empty states for new users" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should provide helpful actions in empty states" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle concurrent operations" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle large datasets" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should maintain performance with complex campaigns" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should support keyboard navigation across all pages" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should provide proper screen reader support" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should persist user progress across browser sessions" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should handle draft recovery" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should handle real-time updates" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should sync data across multiple tabs" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\auth.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="firefox" tests="25" failures="0" skipped="25" time="0" errors="0">
+<testcase name="Authentication Flow › Sign Up › should successfully sign up with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for empty form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for partial form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate email format" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate password strength" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show error for password mismatch" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle existing account error" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle network errors gracefully" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show loading state for slow networks" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should successfully sign in with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should show error for invalid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should validate required fields" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate Google sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate GitHub sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should send password reset email" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should validate email for password reset" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate between sign up and sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate to forgot password" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should support keyboard navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should have proper screen reader labels" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle concurrent sign up attempts" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle session timeout" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle browser back/forward navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should not expose sensitive data in network requests" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should implement rate limiting" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\complete-user-journey.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="firefox" tests="17" failures="0" skipped="17" time="0" errors="0">
+<testcase name="Complete User Journey › Complete user journey: Sign up → Connect platforms → Create campaign → Upload assets → Deploy → View analytics" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle platform connection failures gracefully" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle asset upload failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle campaign creation failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle deployment failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle analytics data loading failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should show appropriate empty states for new users" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should provide helpful actions in empty states" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle concurrent operations" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle large datasets" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should maintain performance with complex campaigns" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should support keyboard navigation across all pages" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should provide proper screen reader support" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should persist user progress across browser sessions" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should handle draft recovery" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should handle real-time updates" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should sync data across multiple tabs" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\auth.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="webkit" tests="25" failures="0" skipped="25" time="0" errors="0">
+<testcase name="Authentication Flow › Sign Up › should successfully sign up with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for empty form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for partial form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate email format" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate password strength" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show error for password mismatch" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle existing account error" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle network errors gracefully" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show loading state for slow networks" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should successfully sign in with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should show error for invalid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should validate required fields" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate Google sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate GitHub sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should send password reset email" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should validate email for password reset" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate between sign up and sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate to forgot password" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should support keyboard navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should have proper screen reader labels" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle concurrent sign up attempts" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle session timeout" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle browser back/forward navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should not expose sensitive data in network requests" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should implement rate limiting" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\complete-user-journey.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="webkit" tests="17" failures="0" skipped="17" time="0" errors="0">
+<testcase name="Complete User Journey › Complete user journey: Sign up → Connect platforms → Create campaign → Upload assets → Deploy → View analytics" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle platform connection failures gracefully" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle asset upload failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle campaign creation failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle deployment failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle analytics data loading failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should show appropriate empty states for new users" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should provide helpful actions in empty states" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle concurrent operations" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle large datasets" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should maintain performance with complex campaigns" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should support keyboard navigation across all pages" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should provide proper screen reader support" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should persist user progress across browser sessions" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should handle draft recovery" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should handle real-time updates" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should sync data across multiple tabs" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\auth.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="Mobile Chrome" tests="25" failures="0" skipped="25" time="0" errors="0">
+<testcase name="Authentication Flow › Sign Up › should successfully sign up with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for empty form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for partial form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate email format" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate password strength" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show error for password mismatch" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle existing account error" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle network errors gracefully" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show loading state for slow networks" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should successfully sign in with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should show error for invalid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should validate required fields" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate Google sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate GitHub sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should send password reset email" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should validate email for password reset" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate between sign up and sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate to forgot password" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should support keyboard navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should have proper screen reader labels" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle concurrent sign up attempts" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle session timeout" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle browser back/forward navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should not expose sensitive data in network requests" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should implement rate limiting" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\complete-user-journey.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="Mobile Chrome" tests="17" failures="0" skipped="17" time="0" errors="0">
+<testcase name="Complete User Journey › Complete user journey: Sign up → Connect platforms → Create campaign → Upload assets → Deploy → View analytics" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle platform connection failures gracefully" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle asset upload failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle campaign creation failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle deployment failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle analytics data loading failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should show appropriate empty states for new users" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should provide helpful actions in empty states" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle concurrent operations" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle large datasets" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should maintain performance with complex campaigns" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should support keyboard navigation across all pages" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should provide proper screen reader support" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should persist user progress across browser sessions" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should handle draft recovery" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should handle real-time updates" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should sync data across multiple tabs" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\auth.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="Mobile Safari" tests="25" failures="0" skipped="25" time="0" errors="0">
+<testcase name="Authentication Flow › Sign Up › should successfully sign up with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for empty form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for partial form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate email format" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate password strength" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show error for password mismatch" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle existing account error" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle network errors gracefully" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show loading state for slow networks" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should successfully sign in with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should show error for invalid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should validate required fields" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate Google sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate GitHub sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should send password reset email" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should validate email for password reset" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate between sign up and sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate to forgot password" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should support keyboard navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should have proper screen reader labels" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle concurrent sign up attempts" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle session timeout" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle browser back/forward navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should not expose sensitive data in network requests" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should implement rate limiting" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\complete-user-journey.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="Mobile Safari" tests="17" failures="0" skipped="17" time="0" errors="0">
+<testcase name="Complete User Journey › Complete user journey: Sign up → Connect platforms → Create campaign → Upload assets → Deploy → View analytics" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle platform connection failures gracefully" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle asset upload failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle campaign creation failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle deployment failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle analytics data loading failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should show appropriate empty states for new users" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should provide helpful actions in empty states" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle concurrent operations" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle large datasets" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should maintain performance with complex campaigns" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should support keyboard navigation across all pages" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should provide proper screen reader support" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should persist user progress across browser sessions" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should handle draft recovery" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should handle real-time updates" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should sync data across multiple tabs" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\auth.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="Microsoft Edge" tests="25" failures="0" skipped="25" time="0" errors="0">
+<testcase name="Authentication Flow › Sign Up › should successfully sign up with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for empty form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for partial form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate email format" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate password strength" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show error for password mismatch" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle existing account error" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle network errors gracefully" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show loading state for slow networks" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should successfully sign in with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should show error for invalid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should validate required fields" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate Google sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate GitHub sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should send password reset email" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should validate email for password reset" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate between sign up and sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate to forgot password" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should support keyboard navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should have proper screen reader labels" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle concurrent sign up attempts" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle session timeout" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle browser back/forward navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should not expose sensitive data in network requests" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should implement rate limiting" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\complete-user-journey.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="Microsoft Edge" tests="17" failures="0" skipped="17" time="0" errors="0">
+<testcase name="Complete User Journey › Complete user journey: Sign up → Connect platforms → Create campaign → Upload assets → Deploy → View analytics" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle platform connection failures gracefully" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle asset upload failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle campaign creation failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle deployment failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle analytics data loading failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should show appropriate empty states for new users" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should provide helpful actions in empty states" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle concurrent operations" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle large datasets" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should maintain performance with complex campaigns" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should support keyboard navigation across all pages" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should provide proper screen reader support" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should persist user progress across browser sessions" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should handle draft recovery" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should handle real-time updates" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should sync data across multiple tabs" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\auth.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="Google Chrome" tests="25" failures="0" skipped="25" time="0" errors="0">
+<testcase name="Authentication Flow › Sign Up › should successfully sign up with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for empty form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show validation errors for partial form submission" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate email format" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should validate password strength" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show error for password mismatch" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle existing account error" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should handle network errors gracefully" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign Up › should show loading state for slow networks" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should successfully sign in with valid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should show error for invalid credentials" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Sign In › should validate required fields" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate Google sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Social Authentication › should initiate GitHub sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should send password reset email" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Password Reset › should validate email for password reset" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate between sign up and sign in" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Navigation › should navigate to forgot password" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should support keyboard navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Accessibility › should have proper screen reader labels" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle concurrent sign up attempts" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle session timeout" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Edge Cases › should handle browser back/forward navigation" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should not expose sensitive data in network requests" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication Flow › Security › should implement rate limiting" classname="specs\auth.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="specs\complete-user-journey.spec.ts" timestamp="2025-05-28T02:10:45.010Z" hostname="Google Chrome" tests="17" failures="0" skipped="17" time="0" errors="0">
+<testcase name="Complete User Journey › Complete user journey: Sign up → Connect platforms → Create campaign → Upload assets → Deploy → View analytics" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle platform connection failures gracefully" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle asset upload failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle campaign creation failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle deployment failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Error Handling Throughout Journey › should handle analytics data loading failures" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should show appropriate empty states for new users" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Empty States Throughout Journey › should provide helpful actions in empty states" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle concurrent operations" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should handle large datasets" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Edge Cases and Performance › should maintain performance with complex campaigns" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should support keyboard navigation across all pages" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Accessibility Throughout Journey › should provide proper screen reader support" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should persist user progress across browser sessions" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Data Persistence and State Management › should handle draft recovery" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should handle real-time updates" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Complete User Journey › Integration and Real-time Features › should sync data across multiple tabs" classname="specs\complete-user-journey.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

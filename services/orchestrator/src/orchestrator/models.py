@@ -192,4 +192,121 @@ class PlanCreatedEvent(BaseModel):
     class Config:
         """Pydantic configuration."""
 
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# Campaign Performance Models
+class CampaignPlatform(str, Enum):
+    """Supported campaign platforms."""
+
+    GOOGLE_ADS = "google_ads"
+    META = "meta"
+    LINKEDIN = "linkedin"
+    TWITTER = "twitter"
+
+
+class CampaignMetrics(BaseModel):
+    """Campaign performance metrics."""
+
+    campaign_id: str
+    campaign_name: str
+    platform: CampaignPlatform
+    impressions: int = 0
+    clicks: int = 0
+    spend: float = 0.0
+    conversions: int = 0
+    revenue: float = 0.0
+    ctr: float = 0.0  # Click-through rate
+    cpc: float = 0.0  # Cost per click
+    cpm: float = 0.0  # Cost per mille
+    roas: float = 0.0  # Return on ad spend
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    date: str = Field(default_factory=lambda: datetime.utcnow().strftime("%Y-%m-%d"))
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class CampaignPerformanceAlert(BaseModel):
+    """Campaign performance alert."""
+
+    alert_id: UUID = Field(default_factory=uuid4)
+    campaign_id: str
+    alert_type: str  # "budget_exceeded", "low_performance", "high_performance", etc.
+    severity: str  # "low", "medium", "high", "critical"
+    message: str
+    threshold: Optional[float] = None
+    current_value: Optional[float] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# Campaign Performance Events
+class CampaignMetricsUpdatedEvent(BaseModel):
+    """Event emitted when campaign metrics are updated."""
+
+    event_type: str = "campaign.metrics_updated"
+    project_id: UUID
+    campaign_id: str
+    metrics: CampaignMetrics
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class CampaignPerformanceAlertEvent(BaseModel):
+    """Event emitted when a campaign performance alert is triggered."""
+
+    event_type: str = "campaign.performance_alert"
+    project_id: UUID
+    alert: CampaignPerformanceAlert
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class CampaignBudgetExceededEvent(BaseModel):
+    """Event emitted when campaign budget is exceeded."""
+
+    event_type: str = "campaign.budget_exceeded"
+    project_id: UUID
+    campaign_id: str
+    budget_limit: float
+    current_spend: float
+    percentage_exceeded: float
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class CampaignPerformanceThresholdEvent(BaseModel):
+    """Event emitted when campaign performance crosses a threshold."""
+
+    event_type: str = "campaign.performance_threshold"
+    project_id: UUID
+    campaign_id: str
+    metric_name: str  # "roas", "ctr", "cpc", etc.
+    threshold_type: str  # "above", "below"
+    threshold_value: float
+    current_value: float
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        """Pydantic configuration."""
+
         json_encoders = {datetime: lambda v: v.isoformat()} 

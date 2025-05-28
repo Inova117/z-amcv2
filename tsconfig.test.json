@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["cypress", "@playwright/test", "node"]
+  },
+  "include": [
+    "tests/**/*",
+    "tests/e2e/cypress/support/index.d.ts",
+    "cypress.config.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+} 

@@ -17,12 +17,16 @@ from ..models import (
     MarketingStrategy,
 )
 from ..services.strategy_service import StrategyService
+from .campaign_performance import router as campaign_performance_router
 from .dependencies import get_strategy_service
 
 logger = logging.getLogger(__name__)
 
 # Create API router
 router = APIRouter()
+
+# Include sub-routers
+router.include_router(campaign_performance_router)
 
 
 @router.post(

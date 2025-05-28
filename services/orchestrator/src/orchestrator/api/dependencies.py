@@ -3,6 +3,7 @@
 import logging
 from functools import lru_cache
 
+from ..services.campaign_performance_service import CampaignPerformanceService
 from ..services.langchain_service import LangChainService
 from ..services.nats_service import NATSService
 from ..services.qdrant_service import QdrantService
@@ -15,6 +16,7 @@ _langchain_service: LangChainService = None
 _qdrant_service: QdrantService = None
 _nats_service: NATSService = None
 _strategy_service: StrategyService = None
+_campaign_performance_service: CampaignPerformanceService = None
 
 
 @lru_cache()
@@ -57,6 +59,17 @@ def get_strategy_service() -> StrategyService:
     return _strategy_service
 
 
+@lru_cache()
+def get_campaign_performance_service() -> CampaignPerformanceService:
+    """Get or create Campaign Performance service instance."""
+    global _campaign_performance_service
+    if _campaign_performance_service is None:
+        _campaign_performance_service = CampaignPerformanceService(
+            nats_service=get_nats_service(),
+        )
+    return _campaign_performance_service
+
+
 async def initialize_services() -> None:
     """Initialize all services and their connections."""
     try:
@@ -70,6 +83,10 @@ async def initialize_services() -> None:
         nats_service = get_nats_service()
         await nats_service.connect()
         
+        # Initialize Campaign Performance Service
+        campaign_performance_service = get_campaign_performance_service()
+        await campaign_performance_service.start_monitoring()
+        
         logger.info("All services initialized successfully")
         
     except Exception as e:
@@ -81,6 +98,10 @@ async def cleanup_services() -> None:
     """Cleanup all services and their connections."""
     try:
         logger.info("Cleaning up services...")
+        
+        # Cleanup Campaign Performance Service
+        if _campaign_performance_service:
+            await _campaign_performance_service.stop_monitoring()
         
         # Cleanup NATS
         if _nats_service:

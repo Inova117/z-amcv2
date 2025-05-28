@@ -1,0 +1,117 @@
+{
+  "platforms": [
+    {
+      "id": "google-ads",
+      "name": "Google Ads",
+      "connected": true,
+      "status": "healthy",
+      "lastSync": "2024-01-15T10:30:00Z",
+      "accountInfo": {
+        "accountId": "123-456-7890",
+        "accountName": "Test Google Ads Account",
+        "currency": "USD",
+        "timezone": "America/New_York"
+      },
+      "permissions": [
+        "ads_management",
+        "read_insights",
+        "manage_campaigns"
+      ],
+      "features": {
+        "campaignManagement": true,
+        "audienceTargeting": true,
+        "conversionTracking": true,
+        "smartBidding": true
+      }
+    },
+    {
+      "id": "meta",
+      "name": "Meta (Facebook & Instagram)",
+      "connected": true,
+      "status": "healthy",
+      "lastSync": "2024-01-15T10:25:00Z",
+      "accountInfo": {
+        "accountId": "act_987654321",
+        "accountName": "Test Meta Business Account",
+        "currency": "USD",
+        "timezone": "America/New_York"
+      },
+      "permissions": [
+        "ads_management",
+        "read_insights",
+        "manage_pages"
+      ],
+      "features": {
+        "campaignManagement": true,
+        "audienceTargeting": true,
+        "conversionTracking": true,
+        "dynamicAds": true
+      }
+    },
+    {
+      "id": "tiktok",
+      "name": "TikTok Ads",
+      "connected": false,
+      "status": "disconnected",
+      "lastSync": null,
+      "accountInfo": null,
+      "permissions": [],
+      "features": {
+        "campaignManagement": true,
+        "audienceTargeting": true,
+        "conversionTracking": true,
+        "sparkAds": true
+      }
+    },
+    {
+      "id": "linkedin",
+      "name": "LinkedIn Ads",
+      "connected": false,
+      "status": "disconnected",
+      "lastSync": null,
+      "accountInfo": null,
+      "permissions": [],
+      "features": {
+        "campaignManagement": true,
+        "audienceTargeting": true,
+        "conversionTracking": true,
+        "leadGenForms": true
+      }
+    },
+    {
+      "id": "twitter",
+      "name": "Twitter Ads",
+      "connected": false,
+      "status": "disconnected",
+      "lastSync": null,
+      "accountInfo": null,
+      "permissions": [],
+      "features": {
+        "campaignManagement": true,
+        "audienceTargeting": true,
+        "conversionTracking": true,
+        "promotedTweets": true
+      }
+    }
+  ],
+  "summary": {
+    "totalPlatforms": 5,
+    "connectedPlatforms": 2,
+    "healthyConnections": 2,
+    "lastGlobalSync": "2024-01-15T10:30:00Z"
+  },
+  "recommendations": [
+    {
+      "type": "connect_platform",
+      "platform": "tiktok",
+      "message": "Connect TikTok Ads to reach younger demographics",
+      "priority": "medium"
+    },
+    {
+      "type": "connect_platform",
+      "platform": "linkedin",
+      "message": "Connect LinkedIn Ads for B2B targeting",
+      "priority": "low"
+    }
+  ]
+} 

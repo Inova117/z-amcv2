@@ -1,0 +1,25 @@
+{
+  "id": "user-123",
+  "email": "test@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "avatar": "https://example.com/avatar.jpg",
+  "role": "user",
+  "subscription": {
+    "plan": "pro",
+    "status": "active",
+    "expiresAt": "2024-12-31T23:59:59Z"
+  },
+  "preferences": {
+    "theme": "light",
+    "notifications": {
+      "email": true,
+      "push": false,
+      "sms": false
+    },
+    "timezone": "UTC",
+    "language": "en"
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "lastLoginAt": "2024-01-15T10:30:00Z"
+} 
