@@ -2,20 +2,24 @@
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: {{ include "zamc.fullname" . }}-psp
+  name: {{ include "zamc.fullname" . }}-restricted
   labels:
     {{- include "zamc.labels" . | nindent 4 }}
 spec:
   # Privilege and access controls
   privileged: false
   allowPrivilegeEscalation: false
-  
-  # Required security contexts
   requiredDropCapabilities:
     - ALL
   allowedCapabilities: []
   
-  # Volume restrictions
+  # Host access controls
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  hostPorts: []
+  
+  # Volume controls
   volumes:
     - 'configMap'
     - 'emptyDir'
@@ -23,79 +27,76 @@ spec:
     - 'secret'
     - 'downwardAPI'
     - 'persistentVolumeClaim'
+  allowedHostPaths: []
   
-  # Host restrictions
-  hostNetwork: false
-  hostIPC: false
-  hostPID: false
-  hostPorts: []
-  
-  # User and group restrictions
+  # Run as controls
   runAsUser:
     rule: 'MustRunAsNonRoot'
   runAsGroup:
     rule: 'MustRunAs'
     ranges:
-      - min: 1000
+      - min: 1
+        max: 65535
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
         max: 65535
   fsGroup:
     rule: 'MustRunAs'
     ranges:
-      - min: 1000
+      - min: 1
         max: 65535
   
-  # Supplemental groups
-  supplementalGroups:
-    rule: 'MustRunAs'
-    ranges:
-      - min: 1000
-        max: 65535
-  
-  # Security context constraints
-  readOnlyRootFilesystem: true
-  
-  # SELinux (if applicable)
+  # Security profiles
   seLinux:
     rule: 'RunAsAny'
+  seccompProfile:
+    type: 'RuntimeDefault'
   
-  # AppArmor (if applicable)
-  annotations:
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: 'runtime/default'
-    apparmor.security.beta.kubernetes.io/defaultProfileName: 'runtime/default'
+  # Read-only root filesystem
+  readOnlyRootFilesystem: true
   
-  # Seccomp
-  seccomp:
-    rule: 'MustRunAs'
-    allowedProfiles:
-      - 'runtime/default'
+  # Forbidden sysctls
+  forbiddenSysctls:
+    - '*'
+  
+  # Default security context
+  defaultAddCapabilities: []
+  defaultAllowPrivilegeEscalation: false
 
 ---
+# RBAC for Pod Security Policy
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "zamc.fullname" . }}-psp-user
+  name: {{ include "zamc.fullname" . }}-psp-restricted
   labels:
     {{- include "zamc.labels" . | nindent 4 }}
 rules:
-- apiGroups: ['policy']
-  resources: ['podsecuritypolicies']
-  verbs: ['use']
-  resourceNames:
-  - {{ include "zamc.fullname" . }}-psp
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      - {{ include "zamc.fullname" . }}-restricted
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "zamc.fullname" . }}-psp-binding
+  name: {{ include "zamc.fullname" . }}-psp-restricted
   labels:
     {{- include "zamc.labels" . | nindent 4 }}
 roleRef:
-  kind: ClusterRole
-  name: {{ include "zamc.fullname" . }}-psp-user
   apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "zamc.fullname" . }}-psp-restricted
 subjects:
-- kind: ServiceAccount
-  name: {{ include "zamc.serviceAccountName" . }}
-  namespace: {{ .Release.Namespace }}
+  - kind: ServiceAccount
+    name: {{ include "zamc.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+
 {{- end }} 

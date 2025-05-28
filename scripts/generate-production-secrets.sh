@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ZAMC Production Secrets Generator
-# This script generates cryptographically secure secrets for production deployment
+# Generates cryptographically secure secrets for production deployment
 
 set -euo pipefail
 
@@ -14,315 +14,554 @@ NC='\033[0m' # No Color
 
 # Configuration
 NAMESPACE="${NAMESPACE:-zamc}"
-SECRET_NAME="${SECRET_NAME:-zamc-secrets}"
-OUTPUT_DIR="${OUTPUT_DIR:-./secrets}"
-BACKUP_DIR="${BACKUP_DIR:-./secrets/backup}"
+ENVIRONMENT="${ENVIRONMENT:-production}"
+OUTPUT_DIR="${OUTPUT_DIR:-./production-secrets}"
+SECRET_LENGTH=64
 
-# Ensure required tools are available
-check_dependencies() {
-    local deps=("openssl" "base64" "kubectl")
+# Functions
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+generate_secret() {
+    local length=${1:-$SECRET_LENGTH}
+    openssl rand -hex $length
+}
+
+generate_jwt_secret() {
+    # Generate a 512-bit (64 byte) JWT secret
+    openssl rand -base64 64 | tr -d '\n'
+}
+
+generate_password() {
+    # Generate a 32 character password with special characters
+    openssl rand -base64 32 | tr -d '\n' | head -c 32
+}
+
+create_directory() {
+    if [[ ! -d "$OUTPUT_DIR" ]]; then
+        mkdir -p "$OUTPUT_DIR"
+        log_info "Created output directory: $OUTPUT_DIR"
+    fi
+}
+
+validate_dependencies() {
+    local deps=("openssl" "kubectl")
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
-            echo -e "${RED}Error: $dep is required but not installed${NC}"
+            log_error "Required dependency '$dep' is not installed"
             exit 1
         fi
     done
+    log_success "All dependencies validated"
 }
 
-# Generate a random password
-generate_password() {
-    local length=${1:-32}
-    openssl rand -base64 $((length * 3 / 4)) | tr -d "=+/" | cut -c1-${length}
-}
-
-# Generate a JWT secret (256-bit minimum)
-generate_jwt_secret() {
-    openssl rand -base64 64 | tr -d "=+/" | cut -c1-64
-}
-
-# Generate a database encryption key
-generate_encryption_key() {
-    openssl rand -hex 32
-}
-
-# Generate API key
-generate_api_key() {
-    echo "zamc_$(openssl rand -hex 16)"
-}
-
-# Create backup of existing secrets
 backup_existing_secrets() {
-    if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" &> /dev/null; then
-        echo -e "${YELLOW}Backing up existing secrets...${NC}"
-        mkdir -p "$BACKUP_DIR"
-        kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" -o yaml > "$BACKUP_DIR/secrets-backup-$(date +%Y%m%d-%H%M%S).yaml"
-        echo -e "${GREEN}Backup created in $BACKUP_DIR${NC}"
+    local backup_dir="$OUTPUT_DIR/backup-$(date +%Y%m%d-%H%M%S)"
+    
+    if kubectl get namespace "$NAMESPACE" &> /dev/null; then
+        log_info "Backing up existing secrets to $backup_dir"
+        mkdir -p "$backup_dir"
+        
+        # Backup existing secrets
+        kubectl get secrets -n "$NAMESPACE" -o yaml > "$backup_dir/secrets-backup.yaml" 2>/dev/null || true
+        log_success "Existing secrets backed up"
+    else
+        log_warning "Namespace '$NAMESPACE' does not exist. Skipping backup."
     fi
 }
 
-# Generate all secrets
-generate_secrets() {
-    echo -e "${BLUE}Generating production secrets...${NC}"
+generate_database_secrets() {
+    log_info "Generating database secrets..."
     
-    # Database secrets
-    POSTGRES_PASSWORD=$(generate_password 32)
-    POSTGRES_USER="zamc_prod"
-    POSTGRES_DB="zamc_production"
-    DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB}?sslmode=require"
+    # PostgreSQL secrets
+    POSTGRES_ROOT_PASSWORD=$(generate_password)
+    POSTGRES_USER="zamc"
+    POSTGRES_PASSWORD=$(generate_password)
+    POSTGRES_DB="zamc"
+    
+    # Database URL
+    DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@zamc-postgresql:5432/${POSTGRES_DB}?sslmode=require"
+    
+    cat > "$OUTPUT_DIR/database-secrets.env" << EOF
+# PostgreSQL Database Secrets
+POSTGRES_ROOT_PASSWORD=${POSTGRES_ROOT_PASSWORD}
+POSTGRES_USER=${POSTGRES_USER}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRES_DB=${POSTGRES_DB}
+DATABASE_URL=${DATABASE_URL}
+EOF
+    
+    log_success "Database secrets generated"
+}
+
+generate_cache_secrets() {
+    log_info "Generating cache secrets..."
     
     # Redis secrets
-    REDIS_PASSWORD=$(generate_password 32)
-    REDIS_URL="redis://:${REDIS_PASSWORD}@redis:6379/0"
+    REDIS_PASSWORD=$(generate_password)
+    REDIS_URL="redis://:${REDIS_PASSWORD}@zamc-redis-master:6379"
+    
+    cat > "$OUTPUT_DIR/cache-secrets.env" << EOF
+# Redis Cache Secrets
+REDIS_PASSWORD=${REDIS_PASSWORD}
+REDIS_URL=${REDIS_URL}
+EOF
+    
+    log_success "Cache secrets generated"
+}
+
+generate_messaging_secrets() {
+    log_info "Generating messaging secrets..."
     
     # NATS secrets
-    NATS_PASSWORD=$(generate_password 32)
-    NATS_URL="nats://zamc:${NATS_PASSWORD}@nats:4222"
+    NATS_USERNAME="zamc"
+    NATS_PASSWORD=$(generate_password)
+    NATS_URL="nats://${NATS_USERNAME}:${NATS_PASSWORD}@zamc-nats:4222"
     
-    # JWT secrets
+    cat > "$OUTPUT_DIR/messaging-secrets.env" << EOF
+# NATS Messaging Secrets
+NATS_USERNAME=${NATS_USERNAME}
+NATS_PASSWORD=${NATS_PASSWORD}
+NATS_URL=${NATS_URL}
+EOF
+    
+    log_success "Messaging secrets generated"
+}
+
+generate_jwt_secrets() {
+    log_info "Generating JWT secrets..."
+    
+    # JWT secrets for authentication
     JWT_SECRET=$(generate_jwt_secret)
     JWT_REFRESH_SECRET=$(generate_jwt_secret)
+    JWT_ACCESS_EXPIRY="15m"
+    JWT_REFRESH_EXPIRY="7d"
     
-    # Encryption keys
-    DATABASE_ENCRYPTION_KEY=$(generate_encryption_key)
-    BACKUP_ENCRYPTION_KEY=$(generate_encryption_key)
-    SESSION_SECRET=$(generate_password 64)
-    
-    # API keys
-    INTERNAL_API_KEY=$(generate_api_key)
-    WEBHOOK_SECRET=$(generate_password 32)
-    
-    # External service placeholders (to be filled manually)
-    SUPABASE_URL="https://your-project.supabase.co"
-    SUPABASE_ANON_KEY="REPLACE_WITH_ACTUAL_SUPABASE_ANON_KEY"
-    SUPABASE_SERVICE_KEY="REPLACE_WITH_ACTUAL_SUPABASE_SERVICE_KEY"
-    
-    OPENAI_API_KEY="REPLACE_WITH_ACTUAL_OPENAI_API_KEY"
-    
-    GOOGLE_ADS_CLIENT_ID="REPLACE_WITH_ACTUAL_GOOGLE_ADS_CLIENT_ID"
-    GOOGLE_ADS_CLIENT_SECRET="REPLACE_WITH_ACTUAL_GOOGLE_ADS_CLIENT_SECRET"
-    GOOGLE_ADS_DEVELOPER_TOKEN="REPLACE_WITH_ACTUAL_GOOGLE_ADS_DEVELOPER_TOKEN"
-    
-    META_APP_ID="REPLACE_WITH_ACTUAL_META_APP_ID"
-    META_APP_SECRET="REPLACE_WITH_ACTUAL_META_APP_SECRET"
-    META_ACCESS_TOKEN="REPLACE_WITH_ACTUAL_META_ACCESS_TOKEN"
-    
-    # Monitoring secrets
-    GRAFANA_ADMIN_PASSWORD=$(generate_password 24)
-    PROMETHEUS_PASSWORD=$(generate_password 24)
-    
-    # Create output directory
-    mkdir -p "$OUTPUT_DIR"
-    
-    # Generate Kubernetes secret YAML
-    cat > "$OUTPUT_DIR/secrets.yaml" << EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: $SECRET_NAME
-  namespace: $NAMESPACE
-  labels:
-    app.kubernetes.io/name: zamc
-    app.kubernetes.io/component: secrets
-type: Opaque
-data:
-  # Database Configuration
-  database-url: $(echo -n "$DATABASE_URL" | base64 -w 0)
-  postgres-user: $(echo -n "$POSTGRES_USER" | base64 -w 0)
-  postgres-password: $(echo -n "$POSTGRES_PASSWORD" | base64 -w 0)
-  postgres-db: $(echo -n "$POSTGRES_DB" | base64 -w 0)
-  database-encryption-key: $(echo -n "$DATABASE_ENCRYPTION_KEY" | base64 -w 0)
-  
-  # Redis Configuration
-  redis-url: $(echo -n "$REDIS_URL" | base64 -w 0)
-  redis-password: $(echo -n "$REDIS_PASSWORD" | base64 -w 0)
-  
-  # NATS Configuration
-  nats-url: $(echo -n "$NATS_URL" | base64 -w 0)
-  nats-password: $(echo -n "$NATS_PASSWORD" | base64 -w 0)
-  
-  # JWT Configuration
-  jwt-secret: $(echo -n "$JWT_SECRET" | base64 -w 0)
-  jwt-refresh-secret: $(echo -n "$JWT_REFRESH_SECRET" | base64 -w 0)
-  session-secret: $(echo -n "$SESSION_SECRET" | base64 -w 0)
-  
-  # API Keys
-  internal-api-key: $(echo -n "$INTERNAL_API_KEY" | base64 -w 0)
-  webhook-secret: $(echo -n "$WEBHOOK_SECRET" | base64 -w 0)
-  
-  # Backup Encryption
-  backup-encryption-key: $(echo -n "$BACKUP_ENCRYPTION_KEY" | base64 -w 0)
-  
-  # External Services (REPLACE WITH ACTUAL VALUES)
-  supabase-url: $(echo -n "$SUPABASE_URL" | base64 -w 0)
-  supabase-anon-key: $(echo -n "$SUPABASE_ANON_KEY" | base64 -w 0)
-  supabase-service-key: $(echo -n "$SUPABASE_SERVICE_KEY" | base64 -w 0)
-  
-  openai-api-key: $(echo -n "$OPENAI_API_KEY" | base64 -w 0)
-  
-  google-ads-client-id: $(echo -n "$GOOGLE_ADS_CLIENT_ID" | base64 -w 0)
-  google-ads-client-secret: $(echo -n "$GOOGLE_ADS_CLIENT_SECRET" | base64 -w 0)
-  google-ads-developer-token: $(echo -n "$GOOGLE_ADS_DEVELOPER_TOKEN" | base64 -w 0)
-  
-  meta-app-id: $(echo -n "$META_APP_ID" | base64 -w 0)
-  meta-app-secret: $(echo -n "$META_APP_SECRET" | base64 -w 0)
-  meta-access-token: $(echo -n "$META_ACCESS_TOKEN" | base64 -w 0)
-  
-  # Monitoring
-  grafana-admin-password: $(echo -n "$GRAFANA_ADMIN_PASSWORD" | base64 -w 0)
-  prometheus-password: $(echo -n "$PROMETHEUS_PASSWORD" | base64 -w 0)
+    cat > "$OUTPUT_DIR/jwt-secrets.env" << EOF
+# JWT Authentication Secrets
+JWT_SECRET=${JWT_SECRET}
+JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY}
+JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY}
 EOF
+    
+    log_success "JWT secrets generated"
+}
 
-    # Generate environment file for local development
-    cat > "$OUTPUT_DIR/.env.production" << EOF
-# ZAMC Production Environment Variables
-# Generated on $(date)
-
-# Database Configuration
-DATABASE_URL=$DATABASE_URL
-POSTGRES_USER=$POSTGRES_USER
-POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-POSTGRES_DB=$POSTGRES_DB
-DATABASE_ENCRYPTION_KEY=$DATABASE_ENCRYPTION_KEY
-
-# Redis Configuration
-REDIS_URL=$REDIS_URL
-REDIS_PASSWORD=$REDIS_PASSWORD
-
-# NATS Configuration
-NATS_URL=$NATS_URL
-NATS_PASSWORD=$NATS_PASSWORD
-
-# JWT Configuration
-JWT_SECRET=$JWT_SECRET
-JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET
-SESSION_SECRET=$SESSION_SECRET
-
-# API Keys
-INTERNAL_API_KEY=$INTERNAL_API_KEY
-WEBHOOK_SECRET=$WEBHOOK_SECRET
-
-# Backup Encryption
-BACKUP_ENCRYPTION_KEY=$BACKUP_ENCRYPTION_KEY
-
-# External Services (REPLACE WITH ACTUAL VALUES)
-SUPABASE_URL=$SUPABASE_URL
-SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY
-
-OPENAI_API_KEY=$OPENAI_API_KEY
-
-GOOGLE_ADS_CLIENT_ID=$GOOGLE_ADS_CLIENT_ID
-GOOGLE_ADS_CLIENT_SECRET=$GOOGLE_ADS_CLIENT_SECRET
-GOOGLE_ADS_DEVELOPER_TOKEN=$GOOGLE_ADS_DEVELOPER_TOKEN
-
-META_APP_ID=$META_APP_ID
-META_APP_SECRET=$META_APP_SECRET
-META_ACCESS_TOKEN=$META_ACCESS_TOKEN
-
-# Monitoring
-GRAFANA_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD
-PROMETHEUS_PASSWORD=$PROMETHEUS_PASSWORD
+generate_encryption_secrets() {
+    log_info "Generating encryption secrets..."
+    
+    # Database encryption key
+    DATABASE_ENCRYPTION_KEY=$(generate_secret 32)
+    
+    # Backup encryption key
+    BACKUP_ENCRYPTION_KEY=$(generate_secret 32)
+    
+    # Session encryption key
+    SESSION_ENCRYPTION_KEY=$(generate_secret 32)
+    
+    cat > "$OUTPUT_DIR/encryption-secrets.env" << EOF
+# Encryption Keys
+DATABASE_ENCRYPTION_KEY=${DATABASE_ENCRYPTION_KEY}
+BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY}
+SESSION_ENCRYPTION_KEY=${SESSION_ENCRYPTION_KEY}
 EOF
+    
+    log_success "Encryption secrets generated"
+}
 
-    # Generate deployment script
-    cat > "$OUTPUT_DIR/deploy-secrets.sh" << 'EOF'
-#!/bin/bash
+generate_monitoring_secrets() {
+    log_info "Generating monitoring secrets..."
+    
+    # Grafana admin password
+    GRAFANA_ADMIN_PASSWORD=$(generate_password)
+    
+    # Prometheus web password
+    PROMETHEUS_PASSWORD=$(generate_password)
+    
+    cat > "$OUTPUT_DIR/monitoring-secrets.env" << EOF
+# Monitoring Secrets
+GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD}
+EOF
+    
+    log_success "Monitoring secrets generated"
+}
 
-# Deploy secrets to Kubernetes
-set -euo pipefail
+generate_ssl_certificates() {
+    log_info "Generating SSL certificates..."
+    
+    local ssl_dir="$OUTPUT_DIR/ssl"
+    mkdir -p "$ssl_dir"
+    
+    # Generate CA private key
+    openssl genrsa -out "$ssl_dir/ca-key.pem" 4096
+    
+    # Generate CA certificate
+    openssl req -new -x509 -days 365 -key "$ssl_dir/ca-key.pem" \
+        -out "$ssl_dir/ca-cert.pem" \
+        -subj "/C=US/ST=CA/L=San Francisco/O=ZAMC/OU=Security/CN=ZAMC-CA"
+    
+    # Generate server private key
+    openssl genrsa -out "$ssl_dir/server-key.pem" 4096
+    
+    # Generate server certificate signing request
+    openssl req -new -key "$ssl_dir/server-key.pem" \
+        -out "$ssl_dir/server.csr" \
+        -subj "/C=US/ST=CA/L=San Francisco/O=ZAMC/OU=Security/CN=zamc.local"
+    
+    # Generate server certificate
+    openssl x509 -req -days 365 -in "$ssl_dir/server.csr" \
+        -CA "$ssl_dir/ca-cert.pem" -CAkey "$ssl_dir/ca-key.pem" \
+        -CAcreateserial -out "$ssl_dir/server-cert.pem"
+    
+    # Clean up CSR
+    rm "$ssl_dir/server.csr"
+    
+    log_success "SSL certificates generated"
+}
 
-NAMESPACE="${NAMESPACE:-zamc}"
-SECRET_FILE="${SECRET_FILE:-./secrets.yaml}"
-
-echo "Deploying secrets to namespace: $NAMESPACE"
+create_kubernetes_secrets() {
+    log_info "Creating Kubernetes secrets..."
 
 # Create namespace if it doesn't exist
-kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-
-# Apply secrets
-kubectl apply -f "$SECRET_FILE"
-
-echo "Secrets deployed successfully!"
-echo "Remember to update external service credentials manually."
-EOF
-
-    chmod +x "$OUTPUT_DIR/deploy-secrets.sh"
-    
-    # Generate validation script
-    cat > "$OUTPUT_DIR/validate-secrets.sh" << 'EOF'
-#!/bin/bash
-
-# Validate deployed secrets
-set -euo pipefail
-
-NAMESPACE="${NAMESPACE:-zamc}"
-SECRET_NAME="${SECRET_NAME:-zamc-secrets}"
-
-echo "Validating secrets in namespace: $NAMESPACE"
-
-# Check if secret exists
-if ! kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" &> /dev/null; then
-    echo "Error: Secret $SECRET_NAME not found in namespace $NAMESPACE"
-    exit 1
-fi
-
-# Validate secret keys
-required_keys=(
-    "database-url"
-    "redis-url"
-    "nats-url"
-    "jwt-secret"
-    "jwt-refresh-secret"
-    "session-secret"
-    "internal-api-key"
-    "webhook-secret"
-    "backup-encryption-key"
-)
-
-echo "Checking required secret keys..."
-for key in "${required_keys[@]}"; do
-    if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" -o jsonpath="{.data.$key}" | base64 -d &> /dev/null; then
-        echo "✓ $key"
-    else
-        echo "✗ $key (missing or invalid)"
+    if ! kubectl get namespace "$NAMESPACE" &> /dev/null; then
+        kubectl create namespace "$NAMESPACE"
+        log_info "Created namespace: $NAMESPACE"
     fi
-done
+    
+    # Source all generated secrets
+    source "$OUTPUT_DIR/database-secrets.env"
+    source "$OUTPUT_DIR/cache-secrets.env"
+    source "$OUTPUT_DIR/messaging-secrets.env"
+    source "$OUTPUT_DIR/jwt-secrets.env"
+    source "$OUTPUT_DIR/encryption-secrets.env"
+    source "$OUTPUT_DIR/monitoring-secrets.env"
+    
+    # Create main application secrets
+    kubectl create secret generic zamc-secrets -n "$NAMESPACE" \
+        --from-literal=database-url="$DATABASE_URL" \
+        --from-literal=redis-url="$REDIS_URL" \
+        --from-literal=nats-url="$NATS_URL" \
+        --from-literal=jwt-secret="$JWT_SECRET" \
+        --from-literal=jwt-refresh-secret="$JWT_REFRESH_SECRET" \
+        --from-literal=database-encryption-key="$DATABASE_ENCRYPTION_KEY" \
+        --from-literal=session-encryption-key="$SESSION_ENCRYPTION_KEY" \
+        --dry-run=client -o yaml > "$OUTPUT_DIR/zamc-secrets.yaml"
+    
+    # Create database secrets
+    kubectl create secret generic zamc-database-secrets -n "$NAMESPACE" \
+        --from-literal=postgres-password="$POSTGRES_ROOT_PASSWORD" \
+        --from-literal=password="$POSTGRES_PASSWORD" \
+        --from-literal=username="$POSTGRES_USER" \
+        --from-literal=database="$POSTGRES_DB" \
+        --dry-run=client -o yaml > "$OUTPUT_DIR/database-k8s-secrets.yaml"
+    
+    # Create monitoring secrets
+    kubectl create secret generic zamc-monitoring-secrets -n "$NAMESPACE" \
+        --from-literal=grafana-admin-password="$GRAFANA_ADMIN_PASSWORD" \
+        --from-literal=prometheus-password="$PROMETHEUS_PASSWORD" \
+        --dry-run=client -o yaml > "$OUTPUT_DIR/monitoring-k8s-secrets.yaml"
+    
+    # Create TLS secrets from generated certificates
+    kubectl create secret tls zamc-tls -n "$NAMESPACE" \
+        --cert="$OUTPUT_DIR/ssl/server-cert.pem" \
+        --key="$OUTPUT_DIR/ssl/server-key.pem" \
+        --dry-run=client -o yaml > "$OUTPUT_DIR/tls-secrets.yaml"
+    
+    log_success "Kubernetes secret manifests created"
+}
 
-echo "Validation complete!"
+create_sealed_secrets() {
+    if command -v kubeseal &> /dev/null; then
+        log_info "Creating sealed secrets..."
+        
+        # Convert secrets to sealed secrets for GitOps
+        for secret_file in "$OUTPUT_DIR"/*-secrets.yaml; do
+            if [[ -f "$secret_file" ]]; then
+                local basename=$(basename "$secret_file" .yaml)
+                kubeseal -f "$secret_file" -w "$OUTPUT_DIR/${basename}-sealed.yaml"
+            fi
+        done
+        
+        log_success "Sealed secrets created"
+    else
+        log_warning "kubeseal not found. Skipping sealed secrets generation."
+    fi
+}
+
+generate_deployment_values() {
+    log_info "Generating production Helm values..."
+    
+    cat > "$OUTPUT_DIR/values-production.yaml" << 'EOF'
+# ZAMC Production Values - Auto-generated
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# Security Configuration
+podSecurityPolicy:
+  enabled: true
+
+networkPolicy:
+  enabled: true
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+# PostgreSQL with encryption
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: "zamc-database-secrets"
+    secretKeys:
+      adminPasswordKey: "postgres-password"
+      userPasswordKey: "password"
+  primary:
+    initdb:
+      scripts:
+        init-encryption.sql: |
+          -- Enable encryption at rest
+          ALTER SYSTEM SET ssl = on;
+          ALTER SYSTEM SET ssl_cert_file = '/etc/ssl/certs/server.crt';
+          ALTER SYSTEM SET ssl_key_file = '/etc/ssl/private/server.key';
+          SELECT pg_reload_conf();
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: "encrypted-ssd"
+    securityContext:
+      enabled: true
+      fsGroup: 1001
+      runAsUser: 1001
+
+# Redis with authentication
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: "zamc-secrets"
+    existingSecretPasswordKey: "redis-password"
+
+# Enable monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+    admin:
+      existingSecret: "zamc-monitoring-secrets"
+      userKey: "admin"
+      passwordKey: "grafana-admin-password"
+
+# Production environment settings
+bff:
+  env:
+    ENVIRONMENT: "production"
+    GRAPHQL_PLAYGROUND: "false"
+    GRAPHQL_INTROSPECTION: "false"
+
+web:
+  env:
+    NODE_ENV: "production"
+    VITE_ENABLE_ANALYTICS: "true"
+
+orchestrator:
+  env:
+    ENVIRONMENT: "production"
+
+connectors:
+  env:
+    ENVIRONMENT: "production"
 EOF
+    
+    log_success "Production values file generated"
+}
 
-    chmod +x "$OUTPUT_DIR/validate-secrets.sh"
+create_security_checklist() {
+    log_info "Creating security deployment checklist..."
+    
+    cat > "$OUTPUT_DIR/SECURITY_DEPLOYMENT_CHECKLIST.md" << 'EOF'
+# ZAMC Production Security Deployment Checklist
+
+## Pre-Deployment Security Verification
+
+### 1. Secrets Management ✅
+- [ ] All secrets generated with cryptographically secure methods
+- [ ] JWT secrets are minimum 512-bit length
+- [ ] Database passwords are complex and unique
+- [ ] No hardcoded secrets in configuration files
+- [ ] Secrets are stored in Kubernetes secrets, not ConfigMaps
+
+### 2. Container Security ✅
+- [ ] All containers run as non-root users (UID 65532)
+- [ ] Read-only root filesystems enabled
+- [ ] All Linux capabilities dropped
+- [ ] SecurityContext properly configured
+- [ ] Distroless base images used where possible
+
+### 3. Network Security ✅
+- [ ] Network policies implemented and tested
+- [ ] Default deny-all policy in place
+- [ ] Only required ports are exposed
+- [ ] Service-to-service communication restricted
+- [ ] External egress limited to necessary endpoints
+
+### 4. Pod Security ✅
+- [ ] Pod Security Policies enabled
+- [ ] Privilege escalation disabled
+- [ ] Host network/PID/IPC access disabled
+- [ ] Seccomp profiles set to RuntimeDefault
+- [ ] AppArmor profiles enabled where available
+
+### 5. TLS/SSL Configuration ✅
+- [ ] TLS certificates generated and configured
+- [ ] All internal communication encrypted
+- [ ] Strong cipher suites configured
+- [ ] Certificate rotation plan in place
+
+### 6. Monitoring and Alerting ✅
+- [ ] Security event monitoring enabled
+- [ ] Failed authentication alerts configured
+- [ ] Anomaly detection thresholds set
+- [ ] Log aggregation and retention configured
+- [ ] SIEM integration tested
+
+### 7. Access Control ✅
+- [ ] RBAC properly configured
+- [ ] Service accounts with minimal permissions
+- [ ] No default service account usage
+- [ ] Admin access properly restricted
+
+### 8. Data Protection ✅
+- [ ] Database encryption at rest enabled
+- [ ] Backup encryption configured
+- [ ] PII data handling verified
+- [ ] Data retention policies implemented
+
+## Deployment Commands
+
+### 1. Apply Secrets
+```bash
+kubectl apply -f zamc-secrets.yaml
+kubectl apply -f database-k8s-secrets.yaml
+kubectl apply -f monitoring-k8s-secrets.yaml
+kubectl apply -f tls-secrets.yaml
+```
+
+### 2. Deploy Application
+```bash
+helm upgrade --install zamc ./infra/k8s/helm/zamc \
+  --namespace zamc \
+  --values values-production.yaml \
+  --wait --timeout=10m
+```
+
+### 3. Verify Security Configuration
+```bash
+# Check pod security contexts
+kubectl get pods -n zamc -o jsonpath='{.items[*].spec.securityContext}'
+
+# Verify network policies
+kubectl get networkpolicies -n zamc
+
+# Check TLS configuration
+kubectl get ingress -n zamc
+```
+
+## Post-Deployment Verification
+
+### 1. Security Testing
+- [ ] Run security scanner against deployed containers
+- [ ] Verify network isolation
+- [ ] Test authentication and authorization
+- [ ] Validate TLS configuration
+- [ ] Check for exposed secrets
+
+### 2. Monitoring Validation
+- [ ] Verify security alerts are working
+- [ ] Test incident response procedures
+- [ ] Validate log collection
+- [ ] Check metrics availability
+
+### 3. Backup and Recovery
+- [ ] Test encrypted backup procedures
+- [ ] Verify disaster recovery plan
+- [ ] Validate secret rotation procedures
+
+## Emergency Contacts
+- Security Team: security@zamc.com
+- DevOps Team: devops@zamc.com
+- Incident Response: incident@zamc.com
+EOF
+    
+    log_success "Security deployment checklist created"
 }
 
 # Main execution
 main() {
-    echo -e "${BLUE}ZAMC Production Secrets Generator${NC}"
-    echo -e "${BLUE}===================================${NC}"
+    log_info "Starting ZAMC Production Secrets Generation"
+    log_info "Environment: $ENVIRONMENT"
+    log_info "Namespace: $NAMESPACE"
+    log_info "Output Directory: $OUTPUT_DIR"
     
-    check_dependencies
+    validate_dependencies
+    create_directory
     backup_existing_secrets
-    generate_secrets
     
-    echo -e "${GREEN}✓ Secrets generated successfully!${NC}"
-    echo -e "${YELLOW}Files created:${NC}"
-    echo "  - $OUTPUT_DIR/secrets.yaml (Kubernetes secret)"
-    echo "  - $OUTPUT_DIR/.env.production (Environment file)"
-    echo "  - $OUTPUT_DIR/deploy-secrets.sh (Deployment script)"
-    echo "  - $OUTPUT_DIR/validate-secrets.sh (Validation script)"
+    # Generate all secrets
+    generate_database_secrets
+    generate_cache_secrets
+    generate_messaging_secrets
+    generate_jwt_secrets
+    generate_encryption_secrets
+    generate_monitoring_secrets
+    generate_ssl_certificates
     
-    echo -e "${RED}IMPORTANT SECURITY NOTES:${NC}"
-    echo "1. Update external service credentials in the generated files"
-    echo "2. Store these files securely and never commit to version control"
-    echo "3. Use proper secret management in production (e.g., HashiCorp Vault)"
-    echo "4. Rotate secrets regularly"
-    echo "5. Restrict access to these files (chmod 600)"
+    # Create Kubernetes manifests
+    create_kubernetes_secrets
+    create_sealed_secrets
+    generate_deployment_values
+    create_security_checklist
     
     # Set secure permissions
-    chmod 600 "$OUTPUT_DIR"/.env.production
-    chmod 600 "$OUTPUT_DIR"/secrets.yaml
+    chmod 600 "$OUTPUT_DIR"/*.env
+    chmod 600 "$OUTPUT_DIR"/ssl/*.pem
     
-    echo -e "${GREEN}Deployment ready! Run: $OUTPUT_DIR/deploy-secrets.sh${NC}"
+    log_success "Production secrets generation completed!"
+    log_info "Secrets location: $OUTPUT_DIR"
+    log_warning "IMPORTANT: Store these secrets securely and remove from disk after deployment"
+    log_info "Next steps:"
+    echo "1. Review generated secrets and values"
+    echo "2. Follow the security deployment checklist"
+    echo "3. Deploy using the generated Helm values"
+    echo "4. Verify security configuration post-deployment"
+    echo "5. Securely delete the generated files"
 }
 
-# Run main function
+# Run if script is executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 main "$@" 
+fi 

@@ -19,6 +19,8 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        # Security annotations
+        container.apparmor.security.beta.kubernetes.io/bff: runtime/default
       labels:
         {{- include "zamc.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: bff
@@ -28,12 +30,29 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "zamc.serviceAccountName" . }}
+      # Enhanced pod security context
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+        sysctls: []
       containers:
         - name: bff
+          # Enhanced container security context
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           image: "{{ .Values.global.imageRegistry }}{{ .Values.bff.image.repository }}:{{ .Values.bff.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.bff.image.pullPolicy }}
           ports:
@@ -94,9 +113,23 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: var-cache
+              mountPath: /var/cache
+            - name: var-run
+              mountPath: /var/run
       volumes:
         - name: tmp
-          emptyDir: {}
+          emptyDir:
+            medium: Memory
+            sizeLimit: 100Mi
+        - name: var-cache
+          emptyDir:
+            medium: Memory
+            sizeLimit: 50Mi
+        - name: var-run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 10Mi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

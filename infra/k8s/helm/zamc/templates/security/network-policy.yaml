@@ -53,7 +53,7 @@ spec:
   podSelector:
     matchLabels:
       {{- include "zamc.selectorLabels" . | nindent 6 }}
-      component: bff
+      app.kubernetes.io/component: bff
   policyTypes:
   - Ingress
   - Egress
@@ -117,7 +117,7 @@ spec:
   podSelector:
     matchLabels:
       {{- include "zamc.selectorLabels" . | nindent 6 }}
-      component: orchestrator
+      app.kubernetes.io/component: orchestrator
   policyTypes:
   - Ingress
   - Egress
@@ -171,7 +171,7 @@ spec:
   podSelector:
     matchLabels:
       {{- include "zamc.selectorLabels" . | nindent 6 }}
-      component: connectors
+      app.kubernetes.io/component: connectors
   policyTypes:
   - Ingress
   - Egress

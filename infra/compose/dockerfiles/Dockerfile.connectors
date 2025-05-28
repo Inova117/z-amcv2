@@ -1,51 +1,53 @@
 # Build stage
 FROM golang:1.21-alpine AS builder
 
-# Install git and ca-certificates (needed for fetching dependencies and HTTPS)
-RUN apk add --no-cache git ca-certificates tzdata
+# Install security updates and build dependencies
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache git ca-certificates tzdata upx
 
-# Create appuser for security
-RUN adduser -D -g '' appuser
+# Create appuser with proper UID/GID for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -D -u 1001 -G appgroup -s /bin/sh appuser
 
 # Set working directory
 WORKDIR /build
 
-# Copy go mod files
-COPY go.mod go.sum ./
+# Copy go mod files with proper ownership
+COPY --chown=appuser:appgroup go.mod go.sum ./
 
 # Download dependencies
-RUN go mod download
-RUN go mod verify
+RUN go mod download && go mod verify
 
-# Copy source code
-COPY . .
+# Copy source code with proper ownership
+COPY --chown=appuser:appgroup . .
 
-# Build the binary
+# Build the binary with security flags and optimization
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags='-w -s -extldflags "-static"' \
+    -buildmode=pie \
     -a -installsuffix cgo \
-    -o connectors ./cmd/main.go
+    -o connectors ./cmd/main.go && \
+    upx --ultra-brute connectors
 
-# Final stage
-FROM scratch
+# Final stage - using distroless for minimal attack surface
+FROM gcr.io/distroless/static-debian11:nonroot
 
-# Import from builder
+# Copy certificates and timezone data
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=builder /etc/passwd /etc/passwd
 
-# Copy the binary
-COPY --from=builder /build/connectors /connectors
+# Copy the binary with proper ownership
+COPY --from=builder --chown=nonroot:nonroot /build/connectors /connectors
 
-# Use non-root user
-USER appuser
+# Use non-root user from distroless
+USER nonroot
 
 # Expose port
 EXPOSE 8002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD ["/connectors", "--health-check"] || exit 1
+    CMD ["/connectors", "--health-check"]
 
 # Run the binary
 ENTRYPOINT ["/connectors"] 

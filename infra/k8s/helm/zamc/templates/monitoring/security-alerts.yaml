@@ -5,285 +5,313 @@ metadata:
   name: {{ include "zamc.fullname" . }}-security-alerts
   labels:
     {{- include "zamc.labels" . | nindent 4 }}
-    component: monitoring
+    prometheus: security
 spec:
   groups:
-  - name: zamc.security.critical
-    interval: 30s
-    rules:
-    # Critical Security Events
-    - alert: CriticalSecurityEvent
-      expr: increase(security_events_total{severity="critical"}[5m]) > 0
-      for: 0s
-      labels:
-        severity: critical
-        component: security
-      annotations:
-        summary: "Critical security event detected"
-        description: "A critical security event has been detected: {{ $labels.event_type }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/critical-events"
-    
-    # Multiple Failed Authentication Attempts
-    - alert: HighFailedAuthenticationRate
-      expr: rate(failed_auth_total[5m]) > 0.1
-      for: 2m
-      labels:
-        severity: warning
-        component: authentication
-      annotations:
-        summary: "High authentication failure rate detected"
-        description: "Authentication failure rate is {{ $value }} failures per second over the last 5 minutes"
-        runbook_url: "https://docs.zamc.app/runbooks/security/auth-failures"
-    
-    # Brute Force Attack Detection
-    - alert: BruteForceAttack
-      expr: increase(failed_auth_total{source_ip!=""}[1m]) > 10
-      for: 1m
-      labels:
-        severity: critical
-        component: authentication
-      annotations:
-        summary: "Potential brute force attack detected"
-        description: "More than 10 failed authentication attempts from IP {{ $labels.source_ip }} in 1 minute"
-        runbook_url: "https://docs.zamc.app/runbooks/security/brute-force"
-    
-    # SQL Injection Attempts
-    - alert: SQLInjectionAttempt
-      expr: increase(security_events_total{event_type="sql_injection"}[5m]) > 0
-      for: 0s
-      labels:
-        severity: critical
-        component: database
-      annotations:
-        summary: "SQL injection attempt detected"
-        description: "SQL injection attempt detected from {{ $labels.source_ip }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/sql-injection"
-    
-    # XSS Attack Attempts
-    - alert: XSSAttempt
-      expr: increase(security_events_total{event_type="xss_attempt"}[5m]) > 0
-      for: 0s
-      labels:
-        severity: high
-        component: web
-      annotations:
-        summary: "XSS attack attempt detected"
-        description: "Cross-site scripting attempt detected from {{ $labels.source_ip }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/xss-attacks"
-    
-    # Rate Limiting Triggered
-    - alert: RateLimitingTriggered
-      expr: increase(rate_limit_exceeded_total[5m]) > 100
-      for: 2m
-      labels:
-        severity: warning
-        component: rate-limiting
-      annotations:
-        summary: "High rate limiting activity"
-        description: "Rate limiting has been triggered {{ $value }} times in the last 5 minutes"
-        runbook_url: "https://docs.zamc.app/runbooks/security/rate-limiting"
-    
-    # Suspicious User Agent
-    - alert: SuspiciousUserAgent
-      expr: increase(security_events_total{event_type="suspicious_user_agent"}[5m]) > 0
-      for: 0s
-      labels:
-        severity: warning
-        component: web
-      annotations:
-        summary: "Suspicious user agent detected"
-        description: "Suspicious user agent detected: {{ $labels.user_agent }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/suspicious-agents"
+    - name: zamc.security.critical
+      interval: 30s
+      rules:
+        # Critical Security Events
+        - alert: CriticalSecurityEvent
+          expr: increase(security_events_total{severity="critical"}[5m]) > 0
+          for: 0s
+          labels:
+            severity: critical
+            category: security
+          annotations:
+            summary: "Critical security event detected"
+            description: "A critical security event has been detected in {{ $labels.service }}. Event type: {{ $labels.event_type }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/critical-events"
 
-  - name: zamc.security.infrastructure
-    interval: 60s
-    rules:
-    # Container Security
-    - alert: ContainerRunningAsRoot
-      expr: kube_pod_container_status_running{container!="POD"} * on(pod, namespace) group_left() kube_pod_spec_security_context_run_as_user{run_as_user="0"} > 0
-      for: 5m
-      labels:
-        severity: high
-        component: container-security
-      annotations:
-        summary: "Container running as root user"
-        description: "Container {{ $labels.container }} in pod {{ $labels.pod }} is running as root user"
-        runbook_url: "https://docs.zamc.app/runbooks/security/container-root"
-    
-    # Privileged Container
-    - alert: PrivilegedContainer
-      expr: kube_pod_container_status_running{container!="POD"} * on(pod, namespace) group_left() kube_pod_spec_security_context_privileged > 0
-      for: 0s
-      labels:
-        severity: critical
-        component: container-security
-      annotations:
-        summary: "Privileged container detected"
-        description: "Container {{ $labels.container }} in pod {{ $labels.pod }} is running in privileged mode"
-        runbook_url: "https://docs.zamc.app/runbooks/security/privileged-container"
-    
-    # Pod Security Policy Violations
-    - alert: PodSecurityPolicyViolation
-      expr: increase(pod_security_policy_violations_total[5m]) > 0
-      for: 0s
-      labels:
-        severity: high
-        component: pod-security
-      annotations:
-        summary: "Pod Security Policy violation"
-        description: "Pod Security Policy violation detected: {{ $labels.violation_type }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/psp-violations"
-    
-    # Network Policy Violations
-    - alert: NetworkPolicyViolation
-      expr: increase(network_policy_violations_total[5m]) > 0
-      for: 0s
-      labels:
-        severity: high
-        component: network-security
-      annotations:
-        summary: "Network Policy violation"
-        description: "Network Policy violation detected from {{ $labels.source_pod }} to {{ $labels.destination_pod }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/network-violations"
+        # Authentication Failures
+        - alert: HighAuthenticationFailureRate
+          expr: rate(failed_auth_total[5m]) > 0.1
+          for: 2m
+          labels:
+            severity: warning
+            category: authentication
+          annotations:
+            summary: "High authentication failure rate detected"
+            description: "Authentication failure rate is {{ $value }} failures/sec, above threshold of 0.1/sec"
+            runbook_url: "https://docs.zamc.com/runbooks/security/auth-failures"
 
-  - name: zamc.security.application
-    interval: 60s
-    rules:
-    # JWT Token Anomalies
-    - alert: JWTTokenAnomalies
-      expr: increase(jwt_validation_failures_total[5m]) > 50
-      for: 2m
-      labels:
-        severity: warning
-        component: authentication
-      annotations:
-        summary: "High JWT validation failure rate"
-        description: "JWT validation failures: {{ $value }} in the last 5 minutes"
-        runbook_url: "https://docs.zamc.app/runbooks/security/jwt-failures"
-    
-    # Unusual API Access Patterns
-    - alert: UnusualAPIAccessPattern
-      expr: rate(http_requests_total[5m]) > 100
-      for: 5m
-      labels:
-        severity: warning
-        component: api
-      annotations:
-        summary: "Unusual API access pattern detected"
-        description: "API request rate is {{ $value }} requests per second, which is unusually high"
-        runbook_url: "https://docs.zamc.app/runbooks/security/api-patterns"
-    
-    # Database Connection Anomalies
-    - alert: DatabaseConnectionAnomalies
-      expr: rate(database_connection_errors_total[5m]) > 0.1
-      for: 2m
-      labels:
-        severity: warning
-        component: database
-      annotations:
-        summary: "High database connection error rate"
-        description: "Database connection error rate: {{ $value }} errors per second"
-        runbook_url: "https://docs.zamc.app/runbooks/security/db-connections"
-    
-    # Unauthorized API Access
-    - alert: UnauthorizedAPIAccess
-      expr: increase(http_requests_total{status=~"401|403"}[5m]) > 20
-      for: 2m
-      labels:
-        severity: warning
-        component: authorization
-      annotations:
-        summary: "High unauthorized API access attempts"
-        description: "{{ $value }} unauthorized API access attempts in the last 5 minutes"
-        runbook_url: "https://docs.zamc.app/runbooks/security/unauthorized-access"
+        - alert: SuspiciousAuthenticationActivity
+          expr: increase(failed_auth_total[10m]) > 20
+          for: 1m
+          labels:
+            severity: critical
+            category: authentication
+          annotations:
+            summary: "Suspicious authentication activity detected"
+            description: "{{ $value }} failed authentication attempts in the last 10 minutes"
+            runbook_url: "https://docs.zamc.com/runbooks/security/suspicious-auth"
 
-  - name: zamc.security.data
-    interval: 60s
-    rules:
-    # Data Exfiltration Detection
-    - alert: LargeDataTransfer
-      expr: rate(http_response_size_bytes[5m]) > 100000000  # 100MB/s
-      for: 5m
-      labels:
-        severity: warning
-        component: data-protection
-      annotations:
-        summary: "Large data transfer detected"
-        description: "Data transfer rate is {{ $value | humanize }}B/s, which may indicate data exfiltration"
-        runbook_url: "https://docs.zamc.app/runbooks/security/data-exfiltration"
-    
-    # Backup Integrity Issues
-    - alert: BackupIntegrityFailure
-      expr: increase(backup_integrity_failures_total[24h]) > 0
-      for: 0s
-      labels:
-        severity: critical
-        component: backup
-      annotations:
-        summary: "Backup integrity check failed"
-        description: "Backup integrity check failed for {{ $labels.backup_type }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/backup-integrity"
-    
-    # Encryption Key Rotation Overdue
-    - alert: EncryptionKeyRotationOverdue
-      expr: time() - encryption_key_last_rotation_timestamp > 7776000  # 90 days
-      for: 0s
-      labels:
-        severity: high
-        component: encryption
-      annotations:
-        summary: "Encryption key rotation overdue"
-        description: "Encryption key for {{ $labels.key_type }} has not been rotated in over 90 days"
-        runbook_url: "https://docs.zamc.app/runbooks/security/key-rotation"
+        # Brute Force Detection
+        - alert: BruteForceAttack
+          expr: increase(failed_auth_total{source_ip!=""}[5m]) by (source_ip) > 10
+          for: 30s
+          labels:
+            severity: critical
+            category: attack
+          annotations:
+            summary: "Brute force attack detected"
+            description: "IP {{ $labels.source_ip }} has {{ $value }} failed authentication attempts in 5 minutes"
+            runbook_url: "https://docs.zamc.com/runbooks/security/brute-force"
 
-  - name: zamc.security.compliance
-    interval: 300s  # 5 minutes
-    rules:
-    # Security Scan Failures
-    - alert: SecurityScanFailure
-      expr: increase(security_scan_failures_total[24h]) > 0
-      for: 0s
-      labels:
-        severity: high
-        component: compliance
-      annotations:
-        summary: "Security scan failure"
-        description: "Security scan failed for {{ $labels.scan_type }}: {{ $labels.failure_reason }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/scan-failures"
-    
-    # Vulnerability Detection
-    - alert: HighSeverityVulnerability
-      expr: vulnerability_count{severity="high"} > 0
-      for: 0s
-      labels:
-        severity: high
-        component: vulnerability-management
-      annotations:
-        summary: "High severity vulnerability detected"
-        description: "{{ $value }} high severity vulnerabilities detected in {{ $labels.component }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/vulnerabilities"
-    
-    # Critical Vulnerability Detection
-    - alert: CriticalVulnerability
-      expr: vulnerability_count{severity="critical"} > 0
-      for: 0s
-      labels:
-        severity: critical
-        component: vulnerability-management
-      annotations:
-        summary: "Critical vulnerability detected"
-        description: "{{ $value }} critical vulnerabilities detected in {{ $labels.component }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/critical-vulnerabilities"
-    
-    # Compliance Check Failures
-    - alert: ComplianceCheckFailure
-      expr: increase(compliance_check_failures_total[24h]) > 0
-      for: 0s
-      labels:
-        severity: warning
-        component: compliance
-      annotations:
-        summary: "Compliance check failure"
-        description: "Compliance check failed for {{ $labels.compliance_type }}: {{ $labels.check_name }}"
-        runbook_url: "https://docs.zamc.app/runbooks/security/compliance-failures"
+    - name: zamc.security.injection
+      interval: 30s
+      rules:
+        # SQL Injection Attempts
+        - alert: SQLInjectionAttempt
+          expr: increase(security_events_total{event_type="sql_injection"}[5m]) > 0
+          for: 0s
+          labels:
+            severity: critical
+            category: injection
+          annotations:
+            summary: "SQL injection attempt detected"
+            description: "SQL injection attempt detected from {{ $labels.source_ip }} on {{ $labels.service }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/sql-injection"
+
+        # XSS Attempts
+        - alert: XSSAttempt
+          expr: increase(security_events_total{event_type="xss"}[5m]) > 0
+          for: 0s
+          labels:
+            severity: high
+            category: injection
+          annotations:
+            summary: "XSS attempt detected"
+            description: "Cross-site scripting attempt detected from {{ $labels.source_ip }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/xss-attempt"
+
+        # Command Injection
+        - alert: CommandInjectionAttempt
+          expr: increase(security_events_total{event_type="command_injection"}[5m]) > 0
+          for: 0s
+          labels:
+            severity: critical
+            category: injection
+          annotations:
+            summary: "Command injection attempt detected"
+            description: "Command injection attempt detected on {{ $labels.service }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/command-injection"
+
+    - name: zamc.security.access
+      interval: 30s
+      rules:
+        # Privilege Escalation
+        - alert: PrivilegeEscalationAttempt
+          expr: increase(security_events_total{event_type="privilege_escalation"}[5m]) > 0
+          for: 0s
+          labels:
+            severity: critical
+            category: access
+          annotations:
+            summary: "Privilege escalation attempt detected"
+            description: "Privilege escalation attempt by user {{ $labels.user_id }} on {{ $labels.service }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/privilege-escalation"
+
+        # Unauthorized Access
+        - alert: UnauthorizedAccessAttempt
+          expr: increase(security_events_total{event_type="unauthorized_access"}[5m]) > 0
+          for: 0s
+          labels:
+            severity: high
+            category: access
+          annotations:
+            summary: "Unauthorized access attempt"
+            description: "Unauthorized access attempt to {{ $labels.resource }} by {{ $labels.user_id }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/unauthorized-access"
+
+        # Admin Panel Access
+        - alert: AdminPanelAccess
+          expr: increase(admin_access_total[5m]) > 0
+          for: 0s
+          labels:
+            severity: warning
+            category: access
+          annotations:
+            summary: "Admin panel access detected"
+            description: "Admin panel accessed by {{ $labels.user_id }} from {{ $labels.source_ip }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/admin-access"
+
+    - name: zamc.security.network
+      interval: 30s
+      rules:
+        # Suspicious Network Activity
+        - alert: SuspiciousNetworkActivity
+          expr: rate(http_requests_total{status=~"4[0-9][0-9]"}[5m]) by (source_ip) > 10
+          for: 2m
+          labels:
+            severity: warning
+            category: network
+          annotations:
+            summary: "Suspicious network activity detected"
+            description: "High rate of 4xx errors from IP {{ $labels.source_ip }}: {{ $value }} requests/sec"
+            runbook_url: "https://docs.zamc.com/runbooks/security/suspicious-network"
+
+        # DDoS Detection
+        - alert: PossibleDDoSAttack
+          expr: rate(http_requests_total[1m]) > 1000
+          for: 30s
+          labels:
+            severity: critical
+            category: attack
+          annotations:
+            summary: "Possible DDoS attack detected"
+            description: "Request rate is {{ $value }} requests/sec, above normal threshold"
+            runbook_url: "https://docs.zamc.com/runbooks/security/ddos-attack"
+
+        # Rate Limit Violations
+        - alert: RateLimitViolations
+          expr: increase(rate_limit_violations_total[5m]) > 100
+          for: 1m
+          labels:
+            severity: warning
+            category: rate_limit
+          annotations:
+            summary: "High rate of rate limit violations"
+            description: "{{ $value }} rate limit violations in the last 5 minutes"
+            runbook_url: "https://docs.zamc.com/runbooks/security/rate-limits"
+
+    - name: zamc.security.data
+      interval: 30s
+      rules:
+        # Data Exfiltration
+        - alert: SuspiciousDataExfiltration
+          expr: rate(api_data_exported_bytes[5m]) > 100000000  # 100MB/5min
+          for: 2m
+          labels:
+            severity: critical
+            category: data
+          annotations:
+            summary: "Suspicious data exfiltration detected"
+            description: "Large amount of data exported: {{ $value }} bytes/sec"
+            runbook_url: "https://docs.zamc.com/runbooks/security/data-exfiltration"
+
+        # Sensitive Data Access
+        - alert: SensitiveDataAccess
+          expr: increase(sensitive_data_access_total[5m]) > 0
+          for: 0s
+          labels:
+            severity: high
+            category: data
+          annotations:
+            summary: "Sensitive data access detected"
+            description: "Access to sensitive data by {{ $labels.user_id }} for {{ $labels.data_type }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/sensitive-data"
+
+    - name: zamc.security.infrastructure
+      interval: 60s
+      rules:
+        # Container Security Violations
+        - alert: ContainerSecurityViolation
+          expr: increase(container_security_violations_total[5m]) > 0
+          for: 0s
+          labels:
+            severity: critical
+            category: infrastructure
+          annotations:
+            summary: "Container security violation detected"
+            description: "Security violation in container {{ $labels.container }} on {{ $labels.pod }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/container-violations"
+
+        # Pod Security Policy Violations
+        - alert: PodSecurityPolicyViolation
+          expr: increase(pod_security_policy_violations_total[5m]) > 0
+          for: 0s
+          labels:
+            severity: high
+            category: infrastructure
+          annotations:
+            summary: "Pod security policy violation"
+            description: "Pod security policy violation in {{ $labels.namespace }}/{{ $labels.pod }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/pod-security"
+
+        # Network Policy Violations
+        - alert: NetworkPolicyViolation
+          expr: increase(network_policy_violations_total[5m]) > 0
+          for: 0s
+          labels:
+            severity: high
+            category: infrastructure
+          annotations:
+            summary: "Network policy violation"
+            description: "Network communication blocked by policy in {{ $labels.namespace }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/network-policy"
+
+        # Certificate Expiration
+        - alert: CertificateExpirationWarning
+          expr: (cert_expiry_timestamp - time()) / 86400 < 30
+          for: 5m
+          labels:
+            severity: warning
+            category: infrastructure
+          annotations:
+            summary: "Certificate expiring soon"
+            description: "Certificate {{ $labels.cert_name }} expires in {{ $value }} days"
+            runbook_url: "https://docs.zamc.com/runbooks/security/cert-expiration"
+
+        - alert: CertificateExpirationCritical
+          expr: (cert_expiry_timestamp - time()) / 86400 < 7
+          for: 1m
+          labels:
+            severity: critical
+            category: infrastructure
+          annotations:
+            summary: "Certificate expiring very soon"
+            description: "Certificate {{ $labels.cert_name }} expires in {{ $value }} days"
+            runbook_url: "https://docs.zamc.com/runbooks/security/cert-expiration"
+
+    - name: zamc.security.compliance
+      interval: 300s  # 5 minutes
+      rules:
+        # Security Event Aggregation
+        - alert: SecurityEventThreshold
+          expr: increase(security_events_total[1h]) > 100
+          for: 5m
+          labels:
+            severity: warning
+            category: compliance
+          annotations:
+            summary: "High security event volume"
+            description: "{{ $value }} security events in the last hour"
+            runbook_url: "https://docs.zamc.com/runbooks/security/event-threshold"
+
+        # Failed Security Scans
+        - alert: SecurityScanFailure
+          expr: security_scan_success == 0
+          for: 5m
+          labels:
+            severity: high
+            category: compliance
+          annotations:
+            summary: "Security scan failure"
+            description: "Security scan failed for {{ $labels.scan_type }} on {{ $labels.target }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/scan-failure"
+
+        # Vulnerability Detection
+        - alert: HighSeverityVulnerability
+          expr: vulnerability_count{severity="critical"} > 0
+          for: 0s
+          labels:
+            severity: critical
+            category: compliance
+          annotations:
+            summary: "Critical vulnerability detected"
+            description: "{{ $value }} critical vulnerabilities found in {{ $labels.component }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/vulnerabilities"
+
+        - alert: SecurityPolicyViolation
+          expr: increase(policy_violations_total[5m]) > 0
+          for: 0s
+          labels:
+            severity: high
+            category: compliance
+          annotations:
+            summary: "Security policy violation"
+            description: "Security policy violation: {{ $labels.policy_name }} in {{ $labels.service }}"
+            runbook_url: "https://docs.zamc.com/runbooks/security/policy-violations"
+
 {{- end }} 
